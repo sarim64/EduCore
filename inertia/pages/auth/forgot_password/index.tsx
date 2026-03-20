@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       ) : (
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label htmlFor="email">Enter your registered SchoolSphere email</Label>
+            <Label htmlFor="email">Enter your registered EduCore email</Label>
             <Input
               name="email"
               type="email"

@@ -23,9 +23,9 @@ export default function RegisterPage() {
 
   return (
     <>
-      <Head title="SchoolSphere - Register" />
+      <Head title="EduCore - Register" />
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">Create your SchoolSphere account</p>
+        <p className="text-sm text-muted-foreground">Create your EduCore account</p>
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit}>

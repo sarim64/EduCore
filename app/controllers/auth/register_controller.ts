@@ -13,7 +13,7 @@ export default class RegisterController {
     const data = await request.validateUsing(registerValidator)
     await webRegister.handle({ data })
 
-    session.flash('success', 'Welcome to SchoolSphere')
+    session.flash('success', 'Welcome to EduCore')
 
     return response.redirect().toRoute('schools.create')
   }

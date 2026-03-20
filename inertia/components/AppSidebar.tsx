@@ -208,7 +208,7 @@ export function AppSidebar() {
             alt="Jaaria Logo"
             className="w-12 h-12 object-contain"
           />
-          <span className="text-primary">SchoolSphere</span>
+          <span className="text-primary">EduCore</span>
         </a>
       </SidebarHeader>
 

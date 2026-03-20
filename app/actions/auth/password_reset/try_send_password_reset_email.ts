@@ -33,9 +33,9 @@ export default class TrySendPasswordResetEmail {
 
     await mail.sendLater((message) => {
       message
-        .subject('Reset your SchoolSphere password')
+        .subject('Reset your EduCore password')
         .to(user.email)
-        .from('no-reply@schoolsphere.com')
+        .from('no-reply@educore.com')
         .htmlView('emails/forgot_password', { user, resetLink })
     })
   }

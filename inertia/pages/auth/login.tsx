@@ -20,9 +20,9 @@ export default function LoginPage() {
 
   return (
     <>
-      <Head title="SchoolSphere - Login" />
+      <Head title="EduCore - Login" />
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">Login to your SchoolSphere account</p>
+        <p className="text-sm text-muted-foreground">Login to your EduCore account</p>
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit}>

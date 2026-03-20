@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* SchoolSphere Theme */
+/* EduCore Theme */
 @custom-variant dark (&:is(.dark *));
 
 /* optional dark mode base */

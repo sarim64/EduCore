@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: PropsWithChildren) {
           <CardHeader>
             <div className="flex flex-col items-center gap-3">
               <CardTitle className="text-3xl font-bold text-center text-foreground">
-                Welcome to SchoolSphere
+                Welcome to EduCore
               </CardTitle>
               <img
                 src="/images/main-logo.png"

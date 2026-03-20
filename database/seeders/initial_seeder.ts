@@ -30,7 +30,7 @@ export default class extends BaseSeeder {
     }
 
     // Seed default super admin user
-    const superAdminEmail = 'superadmin@schoolsphere.com'
+    const superAdminEmail = 'superadmin@educore.com'
     const existingUser = await User.findBy('email', superAdminEmail)
 
     if (!existingUser) {
