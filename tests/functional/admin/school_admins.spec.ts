@@ -39,7 +39,7 @@ test.group('admin/school_admins', () => {
   })
 
   // Verifies that super admin can add a new user as school admin,
-  // that the user is created with mustSetPassword = true, and that a welcome email is queued.
+  // that the user is created with mustSetPassword = true, and that a welcome email is sent.
   test('super admin can add a new user as school admin', async ({ client, assert, cleanup }) => {
     const { messages } = mail.fake()
     cleanup(() => mail.restore())
@@ -77,10 +77,10 @@ test.group('admin/school_admins', () => {
       .first()
     assert.exists(auditLog)
 
-    // Verify welcome email was queued
-    const queued = messages.queued()
-    assert.lengthOf(queued, 1, 'Exactly one welcome email should be queued')
-    assert.equal(queued[0].nodeMailerMessage.to, newAdmin?.email)
+    // Verify welcome email was sent
+    const sent = messages.sent()
+    assert.lengthOf(sent, 1, 'Exactly one welcome email should be sent')
+    assert.equal(sent[0].nodeMailerMessage.to, newAdmin?.email)
   })
 
   // Verifies that super admin can add an existing user as school admin (no email sent for existing users)

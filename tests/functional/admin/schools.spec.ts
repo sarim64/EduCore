@@ -4,6 +4,7 @@ import { SuperAdminFactory } from '../../factories/super_admin_factory.js'
 import { SchoolFactory } from '../../factories/school_factory.js'
 import School from '#models/school'
 import AdminAuditLog from '#models/admin_audit_log'
+import mail from '@adonisjs/mail/services/main'
 
 test.group('admin/schools', () => {
   // Verifies that super admin can view the schools list
@@ -54,7 +55,10 @@ test.group('admin/schools', () => {
   })
 
   // Verifies that super admin can create a school with initial admin
-  test('super admin can create a school with initial admin', async ({ client, assert }) => {
+  test('super admin can create a school with initial admin', async ({ client, assert, cleanup }) => {
+    const { messages } = mail.fake()
+    cleanup(() => mail.restore())
+
     const user = await UserFactory.create()
     await SuperAdminFactory.merge({ userId: user.id }).create()
 
@@ -74,6 +78,10 @@ test.group('admin/schools', () => {
 
     assert.equal(school.users.length, 1)
     assert.equal(school.users[0].email, 'admin@school.com')
+
+    const sent = messages.sent()
+    assert.lengthOf(sent, 1, 'Exactly one welcome email should be sent')
+    assert.equal(sent[0].nodeMailerMessage.to, 'admin@school.com')
   })
 
   // Verifies that super admin can view a school

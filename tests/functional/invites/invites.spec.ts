@@ -23,7 +23,7 @@ test.group('invites', () => {
     response.assertInertiaComponent('invites/index')
   })
 
-  // Verifies that a school admin can send an invitation and an email is queued
+  // Verifies that a school admin can send an invitation and an email is sent
   test('school admin can send an invitation', async ({ client, assert, cleanup }) => {
     const { messages } = mail.fake()
     cleanup(() => mail.restore())
@@ -45,9 +45,9 @@ test.group('invites', () => {
     assert.exists(invite)
     assert.isTrue(invite!.isPending)
 
-    const queued = messages.queued()
-    assert.lengthOf(queued, 1)
-    assert.equal(queued[0].nodeMailerMessage.to, 'invitee@example.com')
+    const sent = messages.sent()
+    assert.lengthOf(sent, 1)
+    assert.equal(sent[0].nodeMailerMessage.to, 'invitee@example.com')
   })
 
   // Verifies that a school admin cannot send a duplicate pending invite to the same email

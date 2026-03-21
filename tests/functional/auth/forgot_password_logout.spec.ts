@@ -75,11 +75,11 @@ test.group('auth/forgot-password & logout', () => {
 
     response.assertRedirectsTo('/auth/forgot-password')
 
-    const queuedMessages = messages.queued()
+    const sentMessages = messages.sent()
 
-    assert.lengthOf(queuedMessages, 1, 'Exactly one email should be queued')
+    assert.lengthOf(sentMessages, 1, 'Exactly one email should be sent')
 
-    const emailMessage = queuedMessages[0]
+    const emailMessage = sentMessages[0]
 
     // Extract HTML content from the email message
     // The HTML content is in the nodeMailerMessage.html property
@@ -174,8 +174,8 @@ test.group('auth/forgot-password & logout', () => {
 
     invalidResponse.assertRedirectsTo('/auth/forgot-password')
 
-    const queuedMessages = messages.queued()
-    assert.lengthOf(queuedMessages, 1, 'Exactly one email should be sent (only for valid user)')
+    const sentMessages = messages.sent()
+    assert.lengthOf(sentMessages, 1, 'Exactly one email should be sent (only for valid user)')
 
     cleanup(() => {
       mail.restore()

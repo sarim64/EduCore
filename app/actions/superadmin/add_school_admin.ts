@@ -35,7 +35,7 @@ export default class AddSchoolAdmin {
     const activation = await db.transaction<ActivationPayload>(async (trx) => {
       let user = await User.findBy('email', data.email)
       let isNewUser = false
-      let welcomeLink: string | null = null
+      let welcomeLink = ''
 
       if (!user) {
         isNewUser = true
@@ -103,7 +103,7 @@ export default class AddSchoolAdmin {
         { client: trx }
       )
 
-      return isNewUser ? { user, welcomeLink: welcomeLink! } : null
+      return isNewUser ? { user, welcomeLink } : null
     })
 
     if (activation) {

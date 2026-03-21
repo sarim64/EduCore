@@ -23,7 +23,7 @@ export default class TrySendPasswordResetEmail {
     await ExpirePasswordResetTokens.handle({ user })
     await user.related('passwordResetTokens').create({
       value,
-      expiresAt: DateTime.now().plus({ hour: 1 }),
+      expiresAt: DateTime.now().plus({ hours: 1 }),
     })
 
     const resetLink = router
