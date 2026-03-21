@@ -2,11 +2,17 @@ import School from '#models/school'
 import User from '#models/user'
 import SuperAdmin from '#models/super_admin'
 import AdminAuditLog from '#models/admin_audit_log'
+import PasswordResetToken from '#models/password_reset_token'
 import { addSchoolAdminValidator } from '#validators/admin'
 import { Infer } from '@vinejs/vine/types'
 import db from '@adonisjs/lucid/services/db'
 import Roles from '#enums/roles'
-import hash from '@adonisjs/core/services/hash'
+import string from '@adonisjs/core/helpers/string'
+import encryption from '@adonisjs/core/services/encryption'
+import { DateTime } from 'luxon'
+import router from '@adonisjs/core/services/router'
+import env from '#start/env'
+import mail from '@adonisjs/mail/services/main'
 import { inject } from '@adonisjs/core'
 import { HttpContext } from '@adonisjs/core/http'
 
@@ -16,44 +22,66 @@ type Params = {
   superAdmin: SuperAdmin
 }
 
+type ActivationPayload = {
+  user: User
+  welcomeLink: string
+} | null
+
 @inject()
 export default class AddSchoolAdmin {
   constructor(protected ctx: HttpContext) {}
 
   async handle({ school, data, superAdmin }: Params) {
-    return db.transaction(async (trx) => {
+    const activation = await db.transaction<ActivationPayload>(async (trx) => {
       let user = await User.findBy('email', data.email)
       let isNewUser = false
+      let welcomeLink: string | null = null
 
       if (!user) {
         isNewUser = true
-        const password = data.password || 'changeme123'
+
         user = await User.create(
           {
             firstName: data.firstName,
-            lastName: data.lastName || null,
+            lastName: data.lastName ?? null,
             email: data.email,
-            password: await hash.make(password),
+            password: string.generateRandom(32),
+            mustSetPassword: true,
           },
           { client: trx }
         )
+
+        const value = string.generateRandom(32)
+        const encryptedValue = encryption.encrypt(value)
+
+        await PasswordResetToken.create(
+          {
+            userId: user.id,
+            value,
+            expiresAt: DateTime.now().plus({ hours: 48 }),
+          },
+          { client: trx }
+        )
+
+        welcomeLink = router
+          .builder()
+          .prefixUrl(env.get('APP_URL'))
+          .params({ value: encryptedValue })
+          .make('forgot_password.reset')
       }
 
-      // Check if user is already an admin of this school
+      // Attach school admin role if not already assigned
       await school.load('users', (query) => {
         query.wherePivot('user_id', user!.id)
       })
 
       if (school.users.length === 0) {
         await school.related('users').attach(
-          {
-            [user.id]: { role_id: Roles.SCHOOL_ADMIN },
-          },
+          { [user.id]: { role_id: Roles.SCHOOL_ADMIN } },
           trx
         )
       }
 
-      // Log the action
       await AdminAuditLog.create(
         {
           superAdminId: superAdmin.id,
@@ -75,7 +103,21 @@ export default class AddSchoolAdmin {
         { client: trx }
       )
 
-      return user
+      return isNewUser ? { user, welcomeLink: welcomeLink! } : null
     })
+
+    if (activation) {
+      await mail.sendLater((message) => {
+        message
+          .subject('Welcome to EduCore – Set Your Password')
+          .to(activation.user.email)
+          .from('no-reply@educore.com')
+          .htmlView('emails/welcome_admin', {
+            user: activation.user,
+            welcomeLink: activation.welcomeLink,
+            school,
+          })
+      })
+    }
   }
 }

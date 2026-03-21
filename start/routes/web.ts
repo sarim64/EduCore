@@ -12,7 +12,5 @@ router
     // School routes
     router.get('/schools/select', [SchoolsController, 'select']).as('schools.select')
     router.post('/schools/select', [SchoolsController, 'setActive']).as('schools.setActive')
-    router.get('/schools/create', [SchoolsController, 'create']).as('schools.create')
-    router.post('/schools', [SchoolsController, 'store']).as('schools.store')
   })
   .use(middleware.auth())

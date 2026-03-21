@@ -19,7 +19,7 @@ export default class ResetPassword {
       })
     }
 
-    await user!.merge({ password: data.password }).save()
+    await user!.merge({ password: data.password, mustSetPassword: false }).save()
     await ExpirePasswordResetTokens.handle({ user: user! })
 
     return user!

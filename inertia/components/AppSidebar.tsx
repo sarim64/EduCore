@@ -204,8 +204,8 @@ export function AppSidebar() {
           className="py-2 px-4 text-xl font-semibold flex flex-row items-center gap-2 cursor-pointer hover:opacity-80 transition"
         >
           <img
-            src="/images/sidebar-logo.png"
-            alt="Jaaria Logo"
+            src="/images/educore_icon.png"
+            alt="EduCore Logo"
             className="w-12 h-12 object-contain"
           />
           <span className="text-primary">EduCore</span>

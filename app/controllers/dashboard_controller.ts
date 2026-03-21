@@ -10,27 +10,28 @@ export default class DashboardController {
     const user = auth.user!
     const schoolId = session.get('schoolId')
 
-    // Check if user is a super admin
     const superAdmin = await SuperAdmin.query()
       .where('userId', user.id)
       .whereNull('revokedAt')
       .first()
 
-    // If super admin without school context, redirect to admin dashboard
     if (superAdmin && !schoolId) {
       return response.redirect().toRoute('admin.dashboard')
     }
 
-    // If regular user without school context, redirect to school creation
     if (!schoolId) {
-      const memberships = await db.from('school_users').where('user_id', user.id).count('* as total')
-      const membershipCount = Number(memberships[0].total ?? 0)
+      const membership = await db
+        .from('school_users')
+        .where('user_id', user.id)
+        .count('* as total')
+        .first()
+      const membershipCount = Number(membership?.total ?? 0)
+
       return membershipCount > 0
         ? response.redirect().toRoute('schools.select')
-        : response.redirect().toRoute('schools.create')
+        : response.redirect().toRoute('login.show')
     }
 
-    // Get user's role for this school
     const schoolUser = await db
       .from('school_users')
       .where('user_id', user.id)
@@ -40,19 +41,22 @@ export default class DashboardController {
 
     const roleId = schoolUser?.role_id
 
-    // Session school context is stale or unauthorized for this user.
+    // Session school context is stale or unauthorized for this user
     if (!roleId && !superAdmin) {
       session.forget('schoolId')
-      const memberships = await db.from('school_users').where('user_id', user.id).count('* as total')
-      const membershipCount = Number(memberships[0].total ?? 0)
+      const membership = await db
+        .from('school_users')
+        .where('user_id', user.id)
+        .count('* as total')
+        .first()
+      const membershipCount = Number(membership?.total ?? 0)
+
       return membershipCount > 0
         ? response.redirect().toRoute('schools.select')
-        : response.redirect().toRoute('schools.create')
+        : response.redirect().toRoute('login.show')
     }
 
-    // Route to appropriate dashboard based on role
     if (roleId === Roles.TEACHER) {
-      // Get staff record linked to this user
       const staff = await Staff.query().where('schoolId', schoolId).where('userId', user.id).first()
 
       if (staff) {
@@ -61,7 +65,6 @@ export default class DashboardController {
       }
     }
 
-    // Default: School Admin / Principal dashboard
     const stats = await DashboardService.getSchoolAdminStats(schoolId)
     return inertia.render('home', { stats })
   }

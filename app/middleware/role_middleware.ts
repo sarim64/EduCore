@@ -1,4 +1,5 @@
 import Roles from '#enums/roles'
+import SuperAdmin from '#models/super_admin'
 import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
 import db from '@adonisjs/lucid/services/db'
@@ -6,6 +7,9 @@ import db from '@adonisjs/lucid/services/db'
 /**
  * Role middleware checks if the authenticated user has one of the allowed roles
  * for the current school context.
+ *
+ * Super admins bypass role checks — they have unrestricted access to all school
+ * routes for troubleshooting and support purposes.
  */
 export default class RoleMiddleware {
   async handle(ctx: HttpContext, next: NextFn, options: { roles: Roles[] }) {
@@ -14,6 +18,16 @@ export default class RoleMiddleware {
 
     if (!user || !schoolId) {
       return ctx.response.forbidden({ message: 'Access denied' })
+    }
+
+    // Super admins have unrestricted access regardless of role
+    const isSuperAdmin = await SuperAdmin.query()
+      .where('userId', user.id)
+      .whereNull('revokedAt')
+      .first()
+
+    if (isSuperAdmin) {
+      return next()
     }
 
     // Get user's role for this school
@@ -29,21 +43,16 @@ export default class RoleMiddleware {
 
     const userRole = pivot.role_id as Roles
 
-    // Check if user has one of the allowed roles
     if (!options.roles.includes(userRole)) {
       return ctx.response.forbidden({ message: 'Insufficient permissions' })
     }
 
-    // Attach role to context for easy access
     ctx.userRole = userRole
 
     await next()
   }
 }
 
-/**
- * Extend HttpContext to include userRole property
- */
 declare module '@adonisjs/core/http' {
   interface HttpContext {
     userRole?: Roles
