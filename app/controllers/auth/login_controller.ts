@@ -16,7 +16,7 @@ export default class LoginController {
 
     try {
       const result = await webLogin.handle({ data })
-      return response.redirect().toPath(result.redirect)
+      return response.redirect().toRoute(result.redirect)
     } catch (error) {
       if (USER_FACING_CODES.includes(error.code)) {
         session.flash('error', error.message)

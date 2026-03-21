@@ -17,7 +17,7 @@ export default class extends BaseSeeder {
           key,
           name: meta.name,
           description: meta.description,
-          isBasic: meta.isBasic,
+          isBasic: meta.includedInPlans.includes('basic'),
           displayOrder: meta.displayOrder,
           icon: meta.icon,
           dependencies: meta.dependencies,

@@ -49,7 +49,7 @@ export default class RoleMiddleware {
 
     ctx.userRole = userRole
 
-    await next()
+    return next()
   }
 }
 

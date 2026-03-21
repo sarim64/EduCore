@@ -26,7 +26,7 @@ export default class SubscriptionPlansController {
     try {
       await StorePlan.handle({ data })
       session.flash('success', 'Subscription plan created successfully')
-      return response.redirect().toPath('/admin/plans')
+      return response.redirect().toRoute('admin.plans.index')
     } catch (error) {
       session.flash('error', error.message)
       return response.redirect().back()
@@ -48,7 +48,7 @@ export default class SubscriptionPlansController {
     try {
       await UpdatePlan.handle({ plan, data })
       session.flash('success', 'Subscription plan updated successfully')
-      return response.redirect().toPath('/admin/plans')
+      return response.redirect().toRoute('admin.plans.index')
     } catch (error) {
       session.flash('error', error.message)
       return response.redirect().back()
@@ -65,6 +65,6 @@ export default class SubscriptionPlansController {
       session.flash('error', error.message)
     }
 
-    return response.redirect().toPath('/admin/plans')
+    return response.redirect().toRoute('admin.plans.index')
   }
 }

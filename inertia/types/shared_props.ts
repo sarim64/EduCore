@@ -11,6 +11,7 @@ export type SharedProps = {
   currentSchool: { id: string; name: string } | null
   enabledModules: string[]
   subscription: { plan: string; status: string; endDate: string | null } | null
+  userRole: number | null
   errors: Record<string, string>
   flash: { success?: string; error?: string }
 }

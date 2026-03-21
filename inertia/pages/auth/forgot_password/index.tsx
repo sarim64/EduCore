@@ -7,12 +7,16 @@ import { Link, useForm } from '@inertiajs/react'
 import { Head } from '@inertiajs/react'
 import { cn } from '~/lib/utils'
 
-export default function ForgotPasswordPage() {
+type Props = {
+  isSent: boolean
+}
+
+export default function ForgotPasswordPage({ isSent }: Props) {
   const { data, setData, post, errors, processing } = useForm({
     email: '',
   })
 
-  const [sent, setSent] = useState(false)
+  const [sent, setSent] = useState(isSent)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -29,7 +33,7 @@ export default function ForgotPasswordPage() {
           <p className="text-sm text-green-600">
             If your email is registered, a reset link has been sent.
           </p>
-          <Link href="../auth/login" className="inline-block text-sm text-blue-600 hover:underline">
+          <Link href="/auth/login" className="inline-block text-sm text-blue-600 hover:underline">
             Back to Sign In
           </Link>
         </div>
@@ -47,13 +51,13 @@ export default function ForgotPasswordPage() {
               className="border border-gray-300 placeholder:text-gray-500 text-black"
             />
           </div>
-          <Button type="submit" className="w-full">
-            Reset Password
+          <Button type="submit" className="w-full" disabled={processing}>
+            {processing ? 'Sending...' : 'Reset Password'}
           </Button>
 
           <div className="text-center">
             <Link
-              href="../auth/login"
+              href="/auth/login"
               className={cn(
                 'inline-block text-sm text-blue-600 hover:underline',
                 processing && 'pointer-events-none opacity-50'

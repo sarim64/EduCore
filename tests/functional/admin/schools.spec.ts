@@ -15,7 +15,7 @@ test.group('admin/schools', () => {
     const response = await client.get('/admin/schools').loginAs(user).withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/schools/index')
+    response.assertInertiaComponent('superadmin/schools/index')
   })
 
   // Verifies that super admin can view create school form
@@ -26,7 +26,7 @@ test.group('admin/schools', () => {
     const response = await client.get('/admin/schools/create').loginAs(user).withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/schools/create')
+    response.assertInertiaComponent('superadmin/schools/create')
   })
 
   // Verifies that super admin can create a school
@@ -85,7 +85,7 @@ test.group('admin/schools', () => {
     const response = await client.get(`/admin/schools/${school.id}`).loginAs(user).withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/schools/show')
+    response.assertInertiaComponent('superadmin/schools/show')
   })
 
   // Verifies that super admin can view edit school form
@@ -100,7 +100,7 @@ test.group('admin/schools', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/schools/edit')
+    response.assertInertiaComponent('superadmin/schools/edit')
   })
 
   // Verifies that super admin can update a school

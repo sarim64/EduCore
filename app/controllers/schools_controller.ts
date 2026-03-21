@@ -69,6 +69,6 @@ export default class SchoolsController {
       ctx
     )
 
-    return response.redirect().toPath('/')
+    return response.redirect().toRoute('dashboard')
   }
 }

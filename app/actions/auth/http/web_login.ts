@@ -34,7 +34,7 @@ export default class WebLogin {
       await this.ctx.auth.use('web').login(user)
       this.ctx.session.forget('schoolId')
       await AuditService.logLogin(user.id, this.ctx)
-      return { redirect: '/admin' as const }
+      return { redirect: 'admin.dashboard' as const }
     }
 
     const schools = await user.related('schools').query().orderBy('name', 'asc')
@@ -52,12 +52,12 @@ export default class WebLogin {
       const schoolId = schools[0].id
       this.ctx.session.put('schoolId', schoolId)
       await AuditService.logLogin(user.id, this.ctx, schoolId)
-      return { redirect: '/' as const }
+      return { redirect: 'dashboard' as const }
     }
 
     // Multi-school: log without school context; school is chosen on next step
     await AuditService.logLogin(user.id, this.ctx)
     this.ctx.session.forget('schoolId')
-    return { redirect: '/schools/select' as const }
+    return { redirect: 'schools.select' as const }
   }
 }

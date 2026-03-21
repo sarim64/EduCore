@@ -60,7 +60,7 @@ export default class SchoolMiddleware {
     }
 
     ctx.school = school
-    await next()
+    return next()
   }
 
   /**

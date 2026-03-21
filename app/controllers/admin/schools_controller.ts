@@ -94,7 +94,7 @@ export default class SchoolsController {
     session.flash('success', `Switched to ${school.name}`)
 
     // Redirect to school dashboard
-    return response.redirect().toPath('/')
+    return response.redirect().toRoute('dashboard')
   }
 
   /**

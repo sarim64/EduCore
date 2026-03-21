@@ -34,7 +34,7 @@ export default class SchoolSubscriptionsController {
       session.flash('error', error.message)
     }
 
-    return response.redirect().toPath(`/admin/schools/${school.id}/subscription`)
+    return response.redirect().toRoute('admin.schools.subscription.show', { schoolId: school.id })
   }
 
   @inject()
@@ -49,6 +49,6 @@ export default class SchoolSubscriptionsController {
       session.flash('error', error.message)
     }
 
-    return response.redirect().toPath(`/admin/schools/${school.id}/subscription`)
+    return response.redirect().toRoute('admin.schools.subscription.show', { schoolId: school.id })
   }
 }

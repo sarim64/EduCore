@@ -27,7 +27,7 @@ test.group('admin/middleware', () => {
     const response = await client.get('/admin').loginAs(user).withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/dashboard')
+    response.assertInertiaComponent('superadmin/dashboard')
   })
 
   // Verifies that revoked super admins cannot access admin routes
@@ -48,6 +48,6 @@ test.group('admin/middleware', () => {
     const response = await client.get('/admin/schools').loginAs(user).withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/schools/index')
+    response.assertInertiaComponent('superadmin/schools/index')
   })
 })

@@ -1,6 +1,7 @@
 const LogoutController = () => import('#controllers/auth/logout_controller')
 const LoginController = () => import('#controllers/auth/login_controller')
 const ForgotPasswordsController = () => import('#controllers/auth/forgot_passwords_controller')
+const AcceptInviteController = () => import('#controllers/auth/accept_invite_controller')
 import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 
@@ -21,6 +22,16 @@ router
       })
       .prefix('forgot-password')
       .as('forgot_password')
+      .use(middleware.guest())
+
+    // Accept Invite
+    router
+      .group(() => {
+        router.get('/accept/:token', [AcceptInviteController, 'show']).as('show')
+        router.post('/accept', [AcceptInviteController, 'store']).as('store')
+      })
+      .prefix('invites')
+      .as('invite.accept')
       .use(middleware.guest())
   })
   .prefix('auth')
