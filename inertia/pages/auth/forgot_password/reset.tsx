@@ -9,11 +9,10 @@ import { Head } from '@inertiajs/react'
 type Props = {
   value: string
   isValid: boolean
-  isSent?: boolean
   email?: string
 }
 export default function ResetPasswordPage({ value, isValid, email }: Props) {
-  const { data, setData, post, errors, reset } = useForm({
+  const { data, setData, post, errors, processing, reset } = useForm({
     value: value,
     password: '',
   })
@@ -33,12 +32,12 @@ export default function ResetPasswordPage({ value, isValid, email }: Props) {
       <Head title="Reset Password" />
       {!isValid ? (
         <div className="space-y-4 text-center">
-          <p className="text-sm text-green-600">Your reset links is expired</p>
+          <p className="text-sm text-red-500">Your reset link has expired.</p>
           <Link
-            href="forgot-password"
+            href="/auth/forgot-password"
             className="inline-block text-sm text-blue-600 hover:underline"
           >
-            Request new password reset link
+            Request a new password reset link
           </Link>
         </div>
       ) : (
@@ -58,14 +57,16 @@ export default function ResetPasswordPage({ value, isValid, email }: Props) {
             <Input
               name="password"
               type="password"
-              aria-errormessage={errors?.password}
               value={data.password}
               onChange={(e) => setData('password', e.target.value)}
               className="border border-gray-300 placeholder:text-gray-500 text-black"
             />
+            {errors?.password && (
+              <p className="text-sm text-red-500">{errors.password}</p>
+            )}
           </div>
-          <Button type="submit" className="w-full">
-            Reset Password
+          <Button type="submit" className="w-full" disabled={processing}>
+            {processing ? 'Resetting...' : 'Reset Password'}
           </Button>
         </form>
       )}

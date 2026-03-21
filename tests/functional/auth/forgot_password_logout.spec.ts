@@ -121,6 +121,32 @@ test.group('auth/forgot-password & logout', () => {
     })
   })
 
+  // Verifies that using an activation link sets mustSetPassword to false.
+  test('activation link sets mustSetPassword to false after password is set', async ({
+    client,
+    assert,
+  }) => {
+    const user = await UserFactory.merge({ mustSetPassword: true }).create()
+
+    const token = await user.related('passwordResetTokens').create({
+      value: 'activationtoken123',
+      expiresAt: DateTime.now().plus({ hours: 48 }),
+    })
+
+    const encryptedValue = encryption.encrypt(token.value)
+
+    const response = await client
+      .post('/auth/forgot-password/reset')
+      .form({ value: encryptedValue, password: 'newpassword123' })
+      .withSession({})
+      .withCsrfToken()
+
+    response.assertRedirectsTo('/auth/login')
+
+    await user.refresh()
+    assert.isFalse(user.mustSetPassword, 'mustSetPassword should be false after activation')
+  })
+
   test('behaves identically for valid and non-existent emails (security)', async ({
     client,
     assert,

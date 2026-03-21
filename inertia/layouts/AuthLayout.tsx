@@ -17,9 +17,9 @@ export default function AuthLayout({ children }: PropsWithChildren) {
                 Welcome to EduCore
               </CardTitle>
               <img
-                src="/images/main-logo.png"
-                alt="Asset Intelligence Layer Logo"
-                className="w-40 h-30 object-contain"
+                src="/images/educore_main_logo.png"
+                alt="EduCore Logo"
+                className="w-80 h-64 object-contain"
               />
             </div>
           </CardHeader>

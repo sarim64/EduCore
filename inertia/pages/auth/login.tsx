@@ -62,30 +62,12 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full">
-          Sign In
+        <Button type="submit" className="w-full" disabled={processing}>
+          {processing ? 'Signing in...' : 'Sign In'}
         </Button>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-sm text-muted-foreground">
-            <span className="bg-white px-2">or</span>
-          </div>
-        </div>
-
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <Link
-            href="/auth/register"
-            className={cn(
-              'text-blue-600 hover:underline',
-              processing && 'pointer-events-none opacity-50'
-            )}
-          >
-            Sign Up
-          </Link>
+          Access is by invitation only. Contact your administrator to get access.
         </p>
       </form>
     </>

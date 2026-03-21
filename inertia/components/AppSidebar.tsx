@@ -12,6 +12,7 @@ import {
   Building2,
   ClipboardList,
   CreditCard,
+  Mail,
 } from 'lucide-react'
 import { Link, usePage, router } from '@inertiajs/react'
 
@@ -185,11 +186,16 @@ function NavItem({ item }: { item: MenuItem }) {
   )
 }
 
+const SCHOOL_ADMIN_ROLE = 2
+
 export function AppSidebar() {
-  const { isSuperAdmin, currentSchool } = usePage<{
+  const { isSuperAdmin, currentSchool, userRole } = usePage<{
     isSuperAdmin: boolean
     currentSchool: { id: string; name: string } | null
+    userRole: number | null
   }>().props
+
+  const isSchoolAdmin = userRole === SCHOOL_ADMIN_ROLE || isSuperAdmin
 
   const handleExitSchool = () => {
     router.post('/admin/schools/exit')
@@ -204,8 +210,8 @@ export function AppSidebar() {
           className="py-2 px-4 text-xl font-semibold flex flex-row items-center gap-2 cursor-pointer hover:opacity-80 transition"
         >
           <img
-            src="/images/sidebar-logo.png"
-            alt="Jaaria Logo"
+            src="/images/educore_icon.png"
+            alt="EduCore Logo"
             className="w-12 h-12 object-contain"
           />
           <span className="text-primary">EduCore</span>
@@ -255,6 +261,11 @@ export function AppSidebar() {
                   {attendanceItems.map((item) => (
                     <NavItem key={item.url} item={item} />
                   ))}
+                  {isSchoolAdmin && (
+                    <NavItem
+                      item={{ title: 'Invitations', url: '/invites', icon: Mail }}
+                    />
+                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

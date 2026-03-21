@@ -211,6 +211,6 @@ test.group('attendance/leave-types', () => {
 
     const response = await client.get('/attendance/leave-types').loginAs(user)
 
-    response.assertRedirectsTo('/schools/create')
+    response.assertRedirectsTo('/auth/login')
   })
 })

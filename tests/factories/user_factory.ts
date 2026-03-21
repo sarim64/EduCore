@@ -9,6 +9,7 @@ export const UserFactory = factory
       lastName: faker.person.lastName(),
       email: faker.internet.email(),
       password: await hash.make('password123'), // hashed
+      mustSetPassword: false,
     }
   })
   .build()

@@ -2,24 +2,24 @@ import type { HttpContext } from '@adonisjs/core/http'
 import School from '#models/school'
 import SchoolDto from '#dtos/school'
 import { inject } from '@adonisjs/core'
-import StoreSchool from '#actions/admin/store_school'
-import UpdateSchool from '#actions/admin/update_school'
-import DeleteSchool from '#actions/admin/delete_school'
-import ListSchools from '#actions/admin/list_schools'
-import GetSchool from '#actions/admin/get_school'
+import StoreSchool from '#actions/superadmin/store_school'
+import UpdateSchool from '#actions/superadmin/update_school'
+import DeleteSchool from '#actions/superadmin/delete_school'
+import ListSchools from '#actions/superadmin/list_schools'
+import GetSchool from '#actions/superadmin/get_school'
 import { adminCreateSchoolValidator, adminUpdateSchoolValidator } from '#validators/admin'
 
 export default class SchoolsController {
   async index({ inertia }: HttpContext) {
     const schools = await ListSchools.handle()
 
-    return inertia.render('admin/schools/index', {
+    return inertia.render('superadmin/schools/index', {
       schools: SchoolDto.fromArray(schools),
     })
   }
 
   async create({ inertia }: HttpContext) {
-    return inertia.render('admin/schools/create')
+    return inertia.render('superadmin/schools/create')
   }
 
   @inject()
@@ -38,7 +38,7 @@ export default class SchoolsController {
   async show({ params, inertia }: HttpContext) {
     const school = await GetSchool.handle({ id: params.id })
 
-    return inertia.render('admin/schools/show', {
+    return inertia.render('superadmin/schools/show', {
       school: new SchoolDto(school),
     })
   }
@@ -46,7 +46,7 @@ export default class SchoolsController {
   async edit({ params, inertia }: HttpContext) {
     const school = await School.findOrFail(params.id)
 
-    return inertia.render('admin/schools/edit', {
+    return inertia.render('superadmin/schools/edit', {
       school: new SchoolDto(school),
     })
   }
@@ -94,7 +94,7 @@ export default class SchoolsController {
     session.flash('success', `Switched to ${school.name}`)
 
     // Redirect to school dashboard
-    return response.redirect().toPath('/')
+    return response.redirect().toRoute('dashboard')
   }
 
   /**
