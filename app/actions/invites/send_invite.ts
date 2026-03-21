@@ -83,11 +83,11 @@ export default class SendInvite {
       .params({ token: encryptedToken })
       .make('invite.accept.show')
 
-    await mail.sendLater((message) => {
+    await mail.send((message) => {
       message
         .subject(`You have been invited to join ${school.name} on EduCore`)
         .to(invite.email)
-        .from('no-reply@educore.com')
+        .from(env.get('MAIL_FROM'))
         .htmlView('emails/school_invite', {
           school,
           roleName: invite.role.name,

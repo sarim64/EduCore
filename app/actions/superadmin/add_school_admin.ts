@@ -107,11 +107,11 @@ export default class AddSchoolAdmin {
     })
 
     if (activation) {
-      await mail.sendLater((message) => {
+      await mail.send((message) => {
         message
           .subject('Welcome to EduCore – Set Your Password')
           .to(activation.user.email)
-          .from('no-reply@educore.com')
+          .from(env.get('MAIL_FROM'))
           .htmlView('emails/welcome_admin', {
             user: activation.user,
             welcomeLink: activation.welcomeLink,

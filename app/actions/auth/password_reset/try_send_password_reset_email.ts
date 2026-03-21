@@ -32,11 +32,11 @@ export default class TrySendPasswordResetEmail {
       .params({ value: encryptedValue })
       .make('forgot_password.reset')
 
-    await mail.sendLater((message) => {
+    await mail.send((message) => {
       message
         .subject('Reset your EduCore password')
         .to(user.email)
-        .from('no-reply@educore.com')
+        .from(env.get('MAIL_FROM'))
         .htmlView('emails/forgot_password', { user, resetLink })
     })
   }

@@ -44,6 +44,18 @@ export default class RemoveSchoolAdmin {
       // Remove user from school
       await school.related('users').detach([user.id], trx)
 
+      // Delete user entirely if they belong to no other schools
+      const otherSchoolCount = await db
+        .from('school_users')
+        .where('user_id', user.id)
+        .count('* as total')
+        .first()
+
+      if (Number(otherSchoolCount?.total ?? 0) === 0) {
+        await db.from('password_reset_tokens').where('user_id', user.id).delete().useTransaction(trx)
+        await User.query({ client: trx }).where('id', user.id).delete()
+      }
+
       // Log the action
       await AdminAuditLog.create(
         {
