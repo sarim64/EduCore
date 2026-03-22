@@ -75,10 +75,7 @@ export default class StoreSchool {
           activation = { user: admin, school, welcomeLink }
         }
 
-        await school.related('users').attach(
-          { [admin.id]: { role_id: Roles.SCHOOL_ADMIN } },
-          trx
-        )
+        await school.related('users').attach({ [admin.id]: { role_id: Roles.SCHOOL_ADMIN } }, trx)
       }
 
       await AdminAuditLog.create(
