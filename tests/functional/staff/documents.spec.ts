@@ -35,7 +35,7 @@ test.group('staff/documents', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('staff/documents/index')
+    response.assertInertiaComponent('school/staff/documents/index')
   })
 
   // Ensures authenticated user can create a document

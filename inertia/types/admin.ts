@@ -12,9 +12,49 @@ export type School = {
   code: string | null
   address: string | null
   phone: string | null
+  city: string | null
+  province: string | null
+  isSuspended: boolean
   createdAt: string
   updatedAt: string | null
   users?: User[]
+}
+
+export type SchoolListItem = {
+  id: string
+  name: string
+  code: string | null
+  city: string | null
+  province: string | null
+  isSuspended: boolean
+  createdAt: string
+  status: 'active' | 'expiring' | 'expired' | 'suspended'
+  studentsCount: number
+  primaryAdmin: { name: string; email: string } | null
+  subscription: {
+    id: string
+    planId: string | null
+    planName: string | null
+    planCode: string | null
+    endDate: string | null
+    status: string
+  } | null
+}
+
+export type SchoolSubscriptionHistory = {
+  id: string
+  planId: string | null
+  status: string
+  startDate: string
+  endDate: string | null
+  maxStudents: number | null
+  notes: string | null
+  plan: { name: string; code: string } | null
+}
+
+export type ExpiringSoonItem = {
+  name: string
+  expiresAt: string
 }
 
 export type SubscriptionPlan = {
@@ -43,6 +83,7 @@ export type SchoolSubscription = {
   customPrice: number | null
   notes: string | null
   plan: SubscriptionPlan | null
+  school: { id: string; name: string } | null
 }
 
 export type AuditLog = {
@@ -52,6 +93,9 @@ export type AuditLog = {
   entityId: string
   description: string | null
   ipAddress: string | null
+  userAgent: string | null
+  oldValues: Record<string, unknown> | null
+  newValues: Record<string, unknown> | null
   createdAt: string
   superAdmin: AuditLogSuperAdmin | null
   targetSchool: { id: string; name: string } | null
@@ -77,14 +121,12 @@ export type PaginationMeta = {
 
 export type AdminDashboardStats = {
   schoolsCount: number
+  schoolsThisMonth: number
   superAdminsCount: number
   totalStudents: number
-  totalEnrollments: number
-}
-
-export type AdminSchoolStats = {
-  id: string
-  name: string
-  studentsCount: number
-  enrollmentsCount: number
+  activeSubscriptionsCount: number
+  expiringSoonCount: number
+  recentSchools: SchoolListItem[]
+  planDistribution: { trial: number; basic: number; pro: number }
+  expiringSoon: ExpiringSoonItem[]
 }

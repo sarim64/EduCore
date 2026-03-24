@@ -2,7 +2,7 @@ import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 import Roles from '#enums/roles'
 
-const InvitesController = () => import('#controllers/invites_controller')
+const InvitesController = () => import('#controllers/school/invites_controller')
 
 router
   .group(() => {

@@ -9,6 +9,9 @@ export default class SchoolDto extends BaseModelDto {
   declare code: string | null
   declare address: string | null
   declare phone: string | null
+  declare city: string | null
+  declare province: string | null
+  declare isSuspended: boolean
   declare logoUrl: string | null
   declare settings: Record<string, unknown>
   declare createdAt: string
@@ -25,6 +28,9 @@ export default class SchoolDto extends BaseModelDto {
     this.code = school.code
     this.address = school.address
     this.phone = school.phone
+    this.city = school.city
+    this.province = school.province
+    this.isSuspended = school.isSuspended
     this.logoUrl = school.logoUrl
     this.settings = school.settings
     this.createdAt = school.createdAt?.toISO() || new Date().toISOString()

@@ -255,7 +255,7 @@ test.group('attendance/students', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('attendance/students/history')
+    response.assertInertiaComponent('school/attendance/students/history')
   })
 
   // Ensures unauthenticated users are redirected

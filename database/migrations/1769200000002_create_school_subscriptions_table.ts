@@ -7,7 +7,7 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('id').primary().defaultTo(this.db.rawQuery('gen_random_uuid()').knexQuery)
 
-      table.uuid('school_id').references('schools.id').onDelete('CASCADE').notNullable().unique()
+      table.uuid('school_id').references('schools.id').onDelete('CASCADE').notNullable()
       table.uuid('plan_id').references('subscription_plans.id').onDelete('SET NULL')
       table.string('status', 20).notNullable().defaultTo('active')
       table.date('start_date').notNullable()

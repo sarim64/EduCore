@@ -35,7 +35,7 @@ test.group('staff/qualifications', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('staff/qualifications/index')
+    response.assertInertiaComponent('school/staff/qualifications/index')
   })
 
   // Ensures authenticated user can create a qualification

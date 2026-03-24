@@ -19,19 +19,11 @@ test.group('admin/schools', () => {
     response.assertInertiaComponent('superadmin/schools/index')
   })
 
-  // Verifies that super admin can view create school form
-  test('super admin can view create school form', async ({ client }) => {
-    const user = await UserFactory.create()
-    await SuperAdminFactory.merge({ userId: user.id }).create()
-
-    const response = await client.get('/admin/schools/create').loginAs(user).withInertia()
-
-    response.assertStatus(200)
-    response.assertInertiaComponent('superadmin/schools/create')
-  })
-
   // Verifies that super admin can create a school
-  test('super admin can create a school', async ({ client, assert }) => {
+  test('super admin can create a school', async ({ client, assert, cleanup }) => {
+    mail.fake()
+    cleanup(() => mail.restore())
+
     const user = await UserFactory.create()
     await SuperAdminFactory.merge({ userId: user.id }).create()
 
@@ -40,6 +32,11 @@ test.group('admin/schools', () => {
       code: 'TST001',
       address: '123 Test St',
       phone: '123-456-7890',
+      city: 'Lahore',
+      province: 'Punjab',
+      adminEmail: 'testadmin@school.com',
+      adminFirstName: 'Test',
+      adminLastName: 'Admin',
     })
 
     response.assertRedirectsTo('/admin/schools')
@@ -47,6 +44,8 @@ test.group('admin/schools', () => {
     const school = await School.findBy('name', 'Test School')
     assert.exists(school)
     assert.equal(school?.code, 'TST001')
+    assert.equal(school?.city, 'Lahore')
+    assert.equal(school?.province, 'Punjab')
 
     // Verify audit log was created
     const auditLog = await AdminAuditLog.findBy('entityId', school?.id)
@@ -96,21 +95,6 @@ test.group('admin/schools', () => {
     response.assertInertiaComponent('superadmin/schools/show')
   })
 
-  // Verifies that super admin can view edit school form
-  test('super admin can view edit school form', async ({ client }) => {
-    const user = await UserFactory.create()
-    await SuperAdminFactory.merge({ userId: user.id }).create()
-    const school = await SchoolFactory.create()
-
-    const response = await client
-      .get(`/admin/schools/${school.id}/edit`)
-      .loginAs(user)
-      .withInertia()
-
-    response.assertStatus(200)
-    response.assertInertiaComponent('superadmin/schools/edit')
-  })
-
   // Verifies that super admin can update a school
   test('super admin can update a school', async ({ client, assert }) => {
     const user = await UserFactory.create()
@@ -123,12 +107,16 @@ test.group('admin/schools', () => {
       .withCsrfToken()
       .form({
         name: 'Updated School Name',
+        city: 'Karachi',
+        province: 'Sindh',
       })
 
-    response.assertRedirectsTo('/admin/schools')
+    response.assertRedirectsTo(`/admin/schools/${school.id}`)
 
     await school.refresh()
     assert.equal(school.name, 'Updated School Name')
+    assert.equal(school.city, 'Karachi')
+    assert.equal(school.province, 'Sindh')
 
     // Verify audit log was created
     const auditLog = await AdminAuditLog.query()

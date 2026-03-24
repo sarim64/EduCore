@@ -13,10 +13,10 @@ test.group('admin/subscriptions - plans', () => {
     const user = await UserFactory.create()
     await SuperAdminFactory.merge({ userId: user.id }).create()
 
-    const response = await client.get('/admin/plans').loginAs(user).withInertia()
+    const response = await client.get('/admin/subscriptions').loginAs(user).withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('superadmin/plans/index')
+    response.assertInertiaComponent('superadmin/subscriptions/index')
   })
 
   // Verifies super admin can create a subscription plan
@@ -34,7 +34,7 @@ test.group('admin/subscriptions - plans', () => {
       maxStaff: 50,
     })
 
-    response.assertRedirectsTo('/admin/plans')
+    response.assertRedirectsTo('/admin/subscriptions')
 
     const plan = await SubscriptionPlan.findBy('code', 'test-plan-create')
     assert.exists(plan)
@@ -89,7 +89,7 @@ test.group('admin/subscriptions - plans', () => {
       .withCsrfToken()
       .form({ name: 'New Name', priceMonthly: 49.99 })
 
-    response.assertRedirectsTo('/admin/plans')
+    response.assertRedirectsTo('/admin/subscriptions')
 
     await plan.refresh()
     assert.equal(plan.name, 'New Name')
@@ -105,7 +105,7 @@ test.group('admin/subscriptions - plans', () => {
 
     const response = await client.delete(`/admin/plans/${plan.id}`).loginAs(user).withCsrfToken()
 
-    response.assertRedirectsTo('/admin/plans')
+    response.assertRedirectsTo('/admin/subscriptions')
 
     const deleted = await SubscriptionPlan.find(plan.id)
     assert.isNull(deleted)
@@ -115,7 +115,7 @@ test.group('admin/subscriptions - plans', () => {
   test('non-super-admin gets 403 on plans', async ({ client }) => {
     const user = await UserFactory.create()
 
-    const getResponse = await client.get('/admin/plans').loginAs(user)
+    const getResponse = await client.get('/admin/subscriptions').loginAs(user)
 
     getResponse.assertStatus(403)
   })

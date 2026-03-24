@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react'
 import { Head, Link, useForm } from '@inertiajs/react'
-import AdminLayout from '~/layouts/AdminLayout'
+import SuperAdminLayout from '~/layouts/SuperAdminLayout'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
@@ -138,4 +138,4 @@ export default function AdminSchoolAdminsCreatePage({ school }: { school: School
   )
 }
 
-AdminSchoolAdminsCreatePage.layout = (page: ReactElement) => <AdminLayout>{page}</AdminLayout>
+AdminSchoolAdminsCreatePage.layout = (page: ReactElement) => <SuperAdminLayout>{page}</SuperAdminLayout>

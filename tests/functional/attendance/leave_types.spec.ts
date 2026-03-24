@@ -23,7 +23,7 @@ test.group('attendance/leave-types', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('attendance/leave-types/index')
+    response.assertInertiaComponent('school/attendance/leave-types/index')
   })
 
   // Confirms that an authenticated user can create a leave type

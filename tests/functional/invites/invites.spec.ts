@@ -20,7 +20,7 @@ test.group('invites', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('invites/index')
+    response.assertInertiaComponent('school/invites/index')
   })
 
   // Verifies that a school admin can send an invitation and an email is sent

@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react'
 import { Head, Link, useForm } from '@inertiajs/react'
-import AdminLayout from '~/layouts/AdminLayout'
+import SuperAdminLayout from '~/layouts/SuperAdminLayout'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
@@ -67,19 +67,19 @@ export default function AdminSchoolSubscriptionPage({
     switch (status) {
       case 'active':
         return (
-          <Badge className="bg-[color:var(--accent-foreground)/10] text-[color:var(--accent-foreground)] border-[color:var(--accent)]">
+          <Badge className="bg-[var(--accent-foreground)/10] text-accent-foreground border-accent">
             Active
           </Badge>
         )
       case 'expired':
         return (
-          <Badge className="bg-[color:var(--destructive)/10] text-[color:var(--destructive)] border-[color:var(--destructive)]">
+          <Badge className="bg-[var(--destructive)/10] text-destructive border-destructive">
             Expired
           </Badge>
         )
       case 'cancelled':
         return (
-          <Badge className="bg-[color:var(--muted)/10] text-[color:var(--muted-foreground)] border-[color:var(--muted)]">
+          <Badge className="bg-[var(--muted)/10] text-muted-foreground border-muted">
             Cancelled
           </Badge>
         )
@@ -97,21 +97,21 @@ export default function AdminSchoolSubscriptionPage({
         <div>
           <Link
             href={`/admin/schools/${school.id}`}
-            className="text-[color:var(--primary)] hover:text-[color:var(--primary-foreground-link)] text-sm"
+            className="text-primary hover:text-(--primary-foreground-link) text-sm"
           >
             ← Back to School
           </Link>
-          <h1 className="text-4xl font-bold text-[color:var(--foreground)] mt-2">
+          <h1 className="text-4xl font-bold text-foreground mt-2">
             {isAssigning ? 'Assign Subscription' : 'Update Subscription'}
           </h1>
-          <p className="text-[color:var(--muted-foreground)] mt-1">Manage school subscription</p>
+          <p className="text-muted-foreground mt-1">Manage school subscription</p>
         </div>
 
         {/* Current Subscription Info */}
         {subscription && (
-          <Card className="bg-[color:var(--card)] border-[color:var(--border)] shadow-md">
+          <Card className="bg-card border-border shadow-md">
             <CardHeader className="flex justify-between items-center">
-              <CardTitle className="text-[color:var(--card-foreground)]">
+              <CardTitle className="text-card-foreground">
                 Current Subscription
               </CardTitle>
               {statusBadge(subscription.status)}
@@ -119,26 +119,26 @@ export default function AdminSchoolSubscriptionPage({
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-[color:var(--muted-foreground)] text-sm">Plan</p>
-                  <p className="text-[color:var(--foreground)] font-medium">
+                  <p className="text-muted-foreground text-sm">Plan</p>
+                  <p className="text-foreground font-medium">
                     {subscription.plan?.name || 'Custom'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[color:var(--muted-foreground)] text-sm">Start Date</p>
-                  <p className="text-[color:var(--foreground)]">{subscription.startDate}</p>
+                  <p className="text-muted-foreground text-sm">Start Date</p>
+                  <p className="text-foreground">{subscription.startDate}</p>
                 </div>
                 <div>
-                  <p className="text-[color:var(--muted-foreground)] text-sm">End Date</p>
-                  <p className="text-[color:var(--foreground)]">
+                  <p className="text-muted-foreground text-sm">End Date</p>
+                  <p className="text-foreground">
                     {subscription.endDate || 'No expiry'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[color:var(--muted-foreground)] text-sm">Custom Price</p>
-                  <p className="text-[color:var(--foreground)]">
+                  <p className="text-muted-foreground text-sm">Custom Price</p>
+                  <p className="text-foreground">
                     {subscription.customPrice != null
-                      ? `$${subscription.customPrice.toFixed(2)}`
+                      ? `PKR ${subscription.customPrice.toLocaleString()}`
                       : 'Plan default'}
                   </p>
                 </div>
@@ -147,20 +147,20 @@ export default function AdminSchoolSubscriptionPage({
               {(subscription.maxStudents != null || subscription.maxStaff != null) && (
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
-                    <p className="text-[color:var(--muted-foreground)] text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Student Limit Override
                     </p>
-                    <p className="text-[color:var(--foreground)]">
+                    <p className="text-foreground">
                       {subscription.maxStudents != null
                         ? formatLimit(subscription.maxStudents)
                         : 'Plan default'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[color:var(--muted-foreground)] text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Staff Limit Override
                     </p>
-                    <p className="text-[color:var(--foreground)]">
+                    <p className="text-foreground">
                       {subscription.maxStaff != null
                         ? formatLimit(subscription.maxStaff)
                         : 'Plan default'}
@@ -171,8 +171,8 @@ export default function AdminSchoolSubscriptionPage({
 
               {subscription.notes && (
                 <div>
-                  <p className="text-[color:var(--muted-foreground)] text-sm">Notes</p>
-                  <p className="text-[color:var(--foreground)]">{subscription.notes}</p>
+                  <p className="text-muted-foreground text-sm">Notes</p>
+                  <p className="text-foreground">{subscription.notes}</p>
                 </div>
               )}
             </CardContent>
@@ -181,15 +181,15 @@ export default function AdminSchoolSubscriptionPage({
 
         {/* Assign / Update Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Card className="bg-[color:var(--card)] border-[color:var(--border)] shadow-md">
+          <Card className="bg-card border-border shadow-md">
             <CardHeader>
-              <CardTitle className="text-[color:var(--card-foreground)]">
+              <CardTitle className="text-card-foreground">
                 Subscription Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="planId" className="text-[color:var(--foreground)]">
+                <Label htmlFor="planId" className="text-foreground">
                   Subscription Plan *
                 </Label>
                 <Select value={data.planId} onValueChange={(v) => setData('planId', v)}>
@@ -199,20 +199,20 @@ export default function AdminSchoolSubscriptionPage({
                   <SelectContent>
                     {activePlans.map((plan) => (
                       <SelectItem key={plan.id} value={plan.id}>
-                        {plan.name} — ${plan.priceMonthly.toFixed(2)}/mo
+                        {plan.name} — PKR {plan.priceMonthly.toLocaleString()}/mo
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {errors.planId && (
-                  <p className="text-[color:var(--destructive)] text-sm">{errors.planId}</p>
+                  <p className="text-destructive text-sm">{errors.planId}</p>
                 )}
               </div>
 
               {selectedPlan && (
                 <div className="text-sm space-y-1">
-                  <p className="text-[color:var(--muted-foreground)]">
-                    <span className="text-[color:var(--foreground)] font-medium">
+                  <p className="text-muted-foreground">
+                    <span className="text-foreground font-medium">
                       {selectedPlan.name}
                     </span>{' '}
                     — Max {formatLimit(selectedPlan.maxStudents)} students,{' '}
@@ -223,7 +223,7 @@ export default function AdminSchoolSubscriptionPage({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startDate" className="text-[color:var(--foreground)]">
+                  <Label htmlFor="startDate" className="text-foreground">
                     Start Date *
                   </Label>
                   <Input
@@ -233,11 +233,11 @@ export default function AdminSchoolSubscriptionPage({
                     onChange={(e) => setData('startDate', e.target.value)}
                   />
                   {errors.startDate && (
-                    <p className="text-[color:var(--destructive)] text-sm">{errors.startDate}</p>
+                    <p className="text-destructive text-sm">{errors.startDate}</p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endDate" className="text-[color:var(--foreground)]">
+                  <Label htmlFor="endDate" className="text-foreground">
                     End Date
                   </Label>
                   <Input
@@ -247,23 +247,23 @@ export default function AdminSchoolSubscriptionPage({
                     onChange={(e) => setData('endDate', e.target.value)}
                   />
                   {errors.endDate && (
-                    <p className="text-[color:var(--destructive)] text-sm">{errors.endDate}</p>
+                    <p className="text-destructive text-sm">{errors.endDate}</p>
                   )}
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[color:var(--card)] border-[color:var(--border)] shadow-md">
+          <Card className="bg-card border-border shadow-md">
             <CardHeader>
-              <CardTitle className="text-[color:var(--card-foreground)]">
+              <CardTitle className="text-card-foreground">
                 Custom Overrides
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="maxStudents" className="text-[color:var(--foreground)]">
+                  <Label htmlFor="maxStudents" className="text-foreground">
                     Max Students
                   </Label>
                   <Input
@@ -275,7 +275,7 @@ export default function AdminSchoolSubscriptionPage({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="maxStaff" className="text-[color:var(--foreground)]">
+                  <Label htmlFor="maxStaff" className="text-foreground">
                     Max Staff
                   </Label>
                   <Input
@@ -289,8 +289,8 @@ export default function AdminSchoolSubscriptionPage({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="customPrice" className="text-[color:var(--foreground)]">
-                  Custom Price ($)
+                <Label htmlFor="customPrice" className="text-foreground">
+                  Custom Price (PKR)
                 </Label>
                 <Input
                   id="customPrice"
@@ -304,7 +304,7 @@ export default function AdminSchoolSubscriptionPage({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-[color:var(--foreground)]">
+                <Label htmlFor="notes" className="text-foreground">
                   Notes
                 </Label>
                 <Textarea
@@ -337,4 +337,4 @@ export default function AdminSchoolSubscriptionPage({
   )
 }
 
-AdminSchoolSubscriptionPage.layout = (page: ReactElement) => <AdminLayout>{page}</AdminLayout>
+AdminSchoolSubscriptionPage.layout = (page: ReactElement) => <SuperAdminLayout>{page}</SuperAdminLayout>
