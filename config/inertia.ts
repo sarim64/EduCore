@@ -4,6 +4,7 @@ import SuperAdmin from '#models/super_admin'
 import School from '#models/school'
 import SchoolSubscription from '#models/school_subscription'
 import ModuleService from '#services/module_service'
+import db from '@adonisjs/lucid/services/db'
 
 const inertiaConfig = defineConfig({
   /**
@@ -52,6 +53,18 @@ const inertiaConfig = defineConfig({
         status: sub.status,
         endDate: sub.endDate?.toISODate() ?? null,
       }
+    },
+    userRole: async (ctx) => {
+      const user = ctx.auth.use('web').user
+      const schoolId = ctx.session?.get('schoolId')
+      if (!user || !schoolId) return null
+      const pivot = await db
+        .from('school_users')
+        .where('school_id', schoolId)
+        .where('user_id', user.id)
+        .select('role_id')
+        .first()
+      return pivot?.role_id ?? null
     },
     errors: (ctx) => ctx.session?.flashMessages.get('errors') ?? {},
     flash: (ctx) => ({

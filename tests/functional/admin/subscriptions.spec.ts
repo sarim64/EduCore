@@ -16,7 +16,7 @@ test.group('admin/subscriptions - plans', () => {
     const response = await client.get('/admin/plans').loginAs(user).withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/plans/index')
+    response.assertInertiaComponent('superadmin/plans/index')
   })
 
   // Verifies super admin can create a subscription plan

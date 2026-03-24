@@ -1,10 +1,11 @@
 enum Roles {
   SUPER_ADMIN = 1,
   SCHOOL_ADMIN = 2,
-  PRINCIPAL = 3,
-  TEACHER = 4,
-  ACCOUNTANT = 5,
-  SUPPORT_STAFF = 6,
+  ACCOUNTANT = 3,
+  PRINCIPAL = 4,
+  VICE_PRINCIPAL = 5,
+  TEACHER = 6,
+  SUPPORT_STAFF = 7,
 }
 
 export default Roles

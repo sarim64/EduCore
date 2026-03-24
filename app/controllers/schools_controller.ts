@@ -1,12 +1,10 @@
-import StoreSchool from '#actions/schools/store_school'
-import { schoolValidator, selectSchoolValidator } from '#validators/school'
+import AuditService from '#services/audit_service'
+import { selectSchoolValidator } from '#validators/school'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 
 export default class SchoolsController {
-  async index({}: HttpContext) {}
-
-  async select({ auth, inertia, response, session }: HttpContext) {
+  async select({ auth, inertia, session, response }: HttpContext) {
     const user = auth.use('web').user!
 
     const schools = await db
@@ -18,10 +16,13 @@ export default class SchoolsController {
       .orderBy('s.name', 'asc')
 
     if (schools.length === 0) {
-      return response.redirect().toRoute('schools.create')
+      session.flash(
+        'error',
+        'Your account is not assigned to any school. Please contact your administrator.'
+      )
+      return response.redirect().toRoute('login.show')
     }
 
-    // Keep single-school users on this page as well, but preselect their only school.
     if (schools.length === 1) {
       session.put('schoolId', schools[0].id)
     }
@@ -38,29 +39,8 @@ export default class SchoolsController {
     })
   }
 
-  async create({ inertia }: HttpContext) {
-    return inertia.render('schools/create_school')
-  }
-
-  async store({ request, auth, response, session }: HttpContext) {
-    const data = await request.validateUsing(schoolValidator)
-
-    let school
-    try {
-      school = await StoreSchool.handle({
-        user: auth.use('web').user!,
-        data,
-      })
-    } catch (error) {
-      session.flash('error', error.message ?? 'Unable to create school')
-      return response.redirect().back()
-    }
-
-    session.put('schoolId', school.id)
-    return response.redirect().toPath('/')
-  }
-
-  async setActive({ request, auth, response, session }: HttpContext) {
+  async setActive(ctx: HttpContext) {
+    const { request, auth, response, session } = ctx
     const user = auth.use('web').user!
     const { schoolId } = await request.validateUsing(selectSchoolValidator)
 
@@ -76,6 +56,19 @@ export default class SchoolsController {
     }
 
     session.put('schoolId', schoolId)
-    return response.redirect().toPath('/')
+
+    await AuditService.log(
+      {
+        schoolId,
+        userId: user.id,
+        action: 'school_switch',
+        entityType: 'School',
+        entityId: schoolId,
+        description: 'User switched active school',
+      },
+      ctx
+    )
+
+    return response.redirect().toRoute('dashboard')
   }
 }

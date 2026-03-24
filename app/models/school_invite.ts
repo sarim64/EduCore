@@ -24,11 +24,26 @@ export default class SchoolInvite extends compose(BaseModel, WithSchool) {
   @column()
   declare roleId: number
 
+  @column()
+  declare token: string | null
+
+  @column.dateTime()
+  declare expiresAt: DateTime | null
+
   @column.dateTime()
   declare acceptedAt: DateTime | null
 
   @column.dateTime()
   declare cancelledAt: DateTime | null
+
+  get isPending(): boolean {
+    return (
+      !this.acceptedAt &&
+      !this.cancelledAt &&
+      !!this.expiresAt &&
+      this.expiresAt > DateTime.now()
+    )
+  }
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

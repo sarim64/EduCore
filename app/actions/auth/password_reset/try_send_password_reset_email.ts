@@ -14,15 +14,16 @@ type Params = {
 export default class TrySendPasswordResetEmail {
   static async handle({ email }: Params) {
     const user = await User.query().where({ email }).first()
-    const value = string.generateRandom(32)
-    const encryptedValue = encryption.encrypt(value)
 
     if (!user) return
+
+    const value = string.generateRandom(32)
+    const encryptedValue = encryption.encrypt(value)
 
     await ExpirePasswordResetTokens.handle({ user })
     await user.related('passwordResetTokens').create({
       value,
-      expiresAt: DateTime.now().plus({ hour: 1 }),
+      expiresAt: DateTime.now().plus({ hours: 1 }),
     })
 
     const resetLink = router
@@ -31,11 +32,11 @@ export default class TrySendPasswordResetEmail {
       .params({ value: encryptedValue })
       .make('forgot_password.reset')
 
-    await mail.sendLater((message) => {
+    await mail.send((message) => {
       message
         .subject('Reset your EduCore password')
         .to(user.email)
-        .from('no-reply@educore.com')
+        .from(env.get('MAIL_FROM'))
         .htmlView('emails/forgot_password', { user, resetLink })
     })
   }

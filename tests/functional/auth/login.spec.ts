@@ -38,9 +38,47 @@ test.group('auth/login', () => {
     response.assertRedirectsTo('/auth/login')
   })
 
-  //Ensures that unauthenticated users cannot access protected routes and are redirected to login.
+  // Ensures that unauthenticated users cannot access protected routes and are redirected to login.
   test('unauthenticated users are redirected from protected routes', async ({ client }) => {
     const response = await client.get('/')
+    response.assertRedirectsTo('/auth/login')
+  })
+
+  // Ensures that a user who has not yet set their password cannot log in.
+  test('blocks login when account is not activated (mustSetPassword = true)', async ({
+    client,
+  }) => {
+    const user = await UserFactory.merge({ password: 'password123', mustSetPassword: true }).create()
+
+    const response = await client
+      .post('/auth/login')
+      .withCsrfToken()
+      .withInertia()
+      .form({ email: user.email, password: 'password123' })
+
+    response.assertInertiaPropsContains({
+      flash: {
+        error: 'Your account is not yet activated. Please check your email for the activation link.',
+      },
+    })
+    response.assertRedirectsTo('/auth/login')
+  })
+
+  // Ensures that a user with no school assigned cannot log in.
+  test('blocks login when user has no school assigned', async ({ client }) => {
+    const user = await UserFactory.merge({ password: 'password123' }).create()
+
+    const response = await client
+      .post('/auth/login')
+      .withCsrfToken()
+      .withInertia()
+      .form({ email: user.email, password: 'password123' })
+
+    response.assertInertiaPropsContains({
+      flash: {
+        error: 'Your account has not been assigned to a school. Please contact your administrator.',
+      },
+    })
     response.assertRedirectsTo('/auth/login')
   })
 })

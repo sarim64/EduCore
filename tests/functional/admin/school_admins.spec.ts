@@ -5,6 +5,7 @@ import { SchoolFactory } from '../../factories/school_factory.js'
 import User from '#models/user'
 import AdminAuditLog from '#models/admin_audit_log'
 import Roles from '#enums/roles'
+import mail from '@adonisjs/mail/services/main'
 
 test.group('admin/school_admins', () => {
   // Verifies that super admin can view school admins list
@@ -19,7 +20,7 @@ test.group('admin/school_admins', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/schools/admins/index')
+    response.assertInertiaComponent('superadmin/schools/admins/index')
   })
 
   // Verifies that super admin can view add admin form
@@ -34,11 +35,15 @@ test.group('admin/school_admins', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/schools/admins/create')
+    response.assertInertiaComponent('superadmin/schools/admins/create')
   })
 
-  // Verifies that super admin can add a new user as school admin
-  test('super admin can add a new user as school admin', async ({ client, assert }) => {
+  // Verifies that super admin can add a new user as school admin,
+  // that the user is created with mustSetPassword = true, and that a welcome email is sent.
+  test('super admin can add a new user as school admin', async ({ client, assert, cleanup }) => {
+    const { messages } = mail.fake()
+    cleanup(() => mail.restore())
+
     const user = await UserFactory.create()
     await SuperAdminFactory.merge({ userId: user.id }).create()
     const school = await SchoolFactory.create()
@@ -57,6 +62,7 @@ test.group('admin/school_admins', () => {
 
     const newAdmin = await User.findBy('email', 'newadmin@school.com')
     assert.exists(newAdmin)
+    assert.isTrue(newAdmin?.mustSetPassword, 'New admin must have mustSetPassword = true')
 
     await school.load('users', (query) => {
       query.wherePivot('role_id', Roles.SCHOOL_ADMIN)
@@ -70,10 +76,18 @@ test.group('admin/school_admins', () => {
       .where('targetUserId', newAdmin?.id || '')
       .first()
     assert.exists(auditLog)
+
+    // Verify welcome email was sent
+    const sent = messages.sent()
+    assert.lengthOf(sent, 1, 'Exactly one welcome email should be sent')
+    assert.equal(sent[0].nodeMailerMessage.to, newAdmin?.email)
   })
 
-  // Verifies that super admin can add an existing user as school admin
-  test('super admin can add an existing user as school admin', async ({ client, assert }) => {
+  // Verifies that super admin can add an existing user as school admin (no email sent for existing users)
+  test('super admin can add an existing user as school admin', async ({ client, assert, cleanup }) => {
+    const { messages } = mail.fake()
+    cleanup(() => mail.restore())
+
     const user = await UserFactory.create()
     await SuperAdminFactory.merge({ userId: user.id }).create()
     const school = await SchoolFactory.create()
@@ -96,6 +110,9 @@ test.group('admin/school_admins', () => {
     })
     const isAdmin = school.users.some((u) => u.id === existingUser.id)
     assert.isTrue(isAdmin)
+
+    // No welcome email for existing users
+    assert.lengthOf(messages.queued(), 0, 'No email should be sent for existing users')
   })
 
   // Verifies that super admin can remove a school admin

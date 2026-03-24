@@ -29,6 +29,13 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column({ serializeAs: null })
   declare password: string
 
+  @column()
+  declare mustSetPassword: boolean
+
+  get fullName(): string {
+    return [this.firstName, this.lastName].filter(Boolean).join(' ')
+  }
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

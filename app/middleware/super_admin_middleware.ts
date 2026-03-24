@@ -11,7 +11,7 @@ export default class SuperAdminMiddleware {
     const user = ctx.auth.user
 
     if (!user) {
-      return ctx.response.redirect().toRoute('auth.login')
+      return ctx.response.redirect().toRoute('login.show')
     }
 
     // Load the super admin record for this user
@@ -27,7 +27,7 @@ export default class SuperAdminMiddleware {
     // Attach super admin to context for easy access in controllers
     ctx.superAdmin = superAdmin
 
-    await next()
+    return next()
   }
 }
 

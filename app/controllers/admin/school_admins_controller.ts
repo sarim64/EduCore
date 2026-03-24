@@ -4,16 +4,16 @@ import User from '#models/user'
 import UserDto from '#dtos/user'
 import SchoolDto from '#dtos/school'
 import { inject } from '@adonisjs/core'
-import AddSchoolAdmin from '#actions/admin/add_school_admin'
-import RemoveSchoolAdmin from '#actions/admin/remove_school_admin'
-import ListSchoolAdmins from '#actions/admin/list_school_admins'
+import AddSchoolAdmin from '#actions/superadmin/add_school_admin'
+import RemoveSchoolAdmin from '#actions/superadmin/remove_school_admin'
+import ListSchoolAdmins from '#actions/superadmin/list_school_admins'
 import { addSchoolAdminValidator } from '#validators/admin'
 
 export default class SchoolAdminsController {
   async index({ params, inertia }: HttpContext) {
     const { school, admins } = await ListSchoolAdmins.handle({ schoolId: params.schoolId })
 
-    return inertia.render('admin/schools/admins/index', {
+    return inertia.render('superadmin/schools/admins/index', {
       school: new SchoolDto(school),
       admins: UserDto.fromArray(admins),
     })
@@ -22,7 +22,7 @@ export default class SchoolAdminsController {
   async create({ params, inertia }: HttpContext) {
     const school = await School.findOrFail(params.schoolId)
 
-    return inertia.render('admin/schools/admins/create', {
+    return inertia.render('superadmin/schools/admins/create', {
       school: new SchoolDto(school),
     })
   }

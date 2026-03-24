@@ -14,10 +14,9 @@ export default class SchoolMiddleware {
   async handle(ctx: HttpContext, next: NextFn) {
     const user = ctx.auth.user
     if (!user) {
-      return ctx.response.redirect().toRoute('auth.login')
+      return ctx.response.redirect().toRoute('login.show')
     }
 
-    // Check if user is a super admin (they have unrestricted access)
     const isSuperAdmin = await SuperAdmin.query()
       .where('userId', user.id)
       .whereNull('revokedAt')
@@ -26,57 +25,71 @@ export default class SchoolMiddleware {
     const schoolId = ctx.session.get('schoolId')
 
     if (!schoolId) {
-      // If no school is set, redirect to school selection/creation
-      // Super admins go to admin dashboard if no school context
       if (isSuperAdmin) {
         return ctx.response.redirect().toRoute('admin.dashboard')
       }
 
-      const memberships = await db.from('school_users').where('user_id', user.id).count('* as total')
-      const membershipCount = Number(memberships[0].total ?? 0)
-      return membershipCount > 0
-        ? ctx.response.redirect().toRoute('schools.select')
-        : ctx.response.redirect().toRoute('schools.create')
+      return this.#handleNoSchool(ctx)
     }
 
-    // Load the school
     const school = await School.find(schoolId)
 
     if (!school) {
-      // If school doesn't exist, clear the session and redirect
       ctx.session.forget('schoolId')
+
       if (isSuperAdmin) {
         return ctx.response.redirect().toRoute('admin.dashboard')
       }
-      const memberships = await db.from('school_users').where('user_id', user.id).count('* as total')
-      const membershipCount = Number(memberships[0].total ?? 0)
-      return membershipCount > 0
-        ? ctx.response.redirect().toRoute('schools.select')
-        : ctx.response.redirect().toRoute('schools.create')
+
+      return this.#handleNoSchool(ctx)
     }
 
     // Super admins can access any school without being a member
     if (!isSuperAdmin) {
-      // Verify regular user has access to this school
-      await user.load('schools')
-      const hasAccess = user.schools.some((s) => s.id === schoolId)
+      // Direct pivot query — no need to load all user schools
+      const membership = await db
+        .from('school_users')
+        .where('school_id', schoolId)
+        .where('user_id', user.id)
+        .first()
 
-      if (!hasAccess) {
+      if (!membership) {
         ctx.session.forget('schoolId')
         return ctx.response.redirect().toRoute('schools.select')
       }
     }
 
-    // Attach school to context for easy access in controllers
     ctx.school = school
+    return next()
+  }
 
-    await next()
+  /**
+   * Called when the user is authenticated but has no school context.
+   * If they belong to schools, send them to selection. Otherwise they
+   * should not be logged in at all — force logout and send to login.
+   */
+  async #handleNoSchool(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const membership = await db
+      .from('school_users')
+      .where('user_id', user.id)
+      .count('* as total')
+      .first()
+    const membershipCount = Number(membership?.total ?? 0)
+
+    if (membershipCount > 0) {
+      return ctx.response.redirect().toRoute('schools.select')
+    }
+
+    await ctx.auth.use('web').logout()
+    ctx.session.flash(
+      'error',
+      'Your account is not assigned to any school. Please contact your administrator.'
+    )
+    return ctx.response.redirect().toRoute('login.show')
   }
 }
 
-/**
- * Extend HttpContext to include school property
- */
 declare module '@adonisjs/core/http' {
   interface HttpContext {
     school?: School

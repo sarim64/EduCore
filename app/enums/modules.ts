@@ -9,13 +9,17 @@ enum Modules {
 
 export default Modules
 
+// Plans that include each module — kept as string literals to avoid circular imports
+// with subscription_plans.ts (which imports Modules)
+export type ModulePlan = 'trial' | 'basic' | 'pro'
+
 export const MODULE_METADATA: Record<
   Modules,
   {
     name: string
     description: string
     icon: string
-    isBasic: boolean
+    includedInPlans: ModulePlan[]
     displayOrder: number
     dependencies: Modules[]
   }
@@ -24,7 +28,7 @@ export const MODULE_METADATA: Record<
     name: 'Academic Structure',
     description: 'Academic years, classes, sections, and subjects management',
     icon: 'GraduationCap',
-    isBasic: true,
+    includedInPlans: ['trial', 'basic'],
     displayOrder: 1,
     dependencies: [],
   },
@@ -32,7 +36,7 @@ export const MODULE_METADATA: Record<
     name: 'Student Management',
     description: 'Student registration, enrollment, guardians, and documents',
     icon: 'Users',
-    isBasic: true,
+    includedInPlans: ['trial', 'basic'],
     displayOrder: 2,
     dependencies: [],
   },
@@ -40,7 +44,7 @@ export const MODULE_METADATA: Record<
     name: 'Staff & HR',
     description: 'Departments, designations, staff profiles, and qualifications',
     icon: 'Briefcase',
-    isBasic: true,
+    includedInPlans: ['trial', 'basic'],
     displayOrder: 3,
     dependencies: [],
   },
@@ -48,7 +52,7 @@ export const MODULE_METADATA: Record<
     name: 'Attendance',
     description: 'Student and staff attendance tracking, leave management',
     icon: 'ClipboardCheck',
-    isBasic: true,
+    includedInPlans: ['trial', 'basic'],
     displayOrder: 4,
     dependencies: [],
   },
@@ -56,7 +60,7 @@ export const MODULE_METADATA: Record<
     name: 'Fee Management',
     description: 'Fee structures, challans, payments, discounts, and student ledger',
     icon: 'Receipt',
-    isBasic: true,
+    includedInPlans: ['trial', 'basic'],
     displayOrder: 5,
     dependencies: [],
   },
@@ -64,7 +68,7 @@ export const MODULE_METADATA: Record<
     name: 'Reports',
     description: 'Enrollment, attendance, and staff directory reports',
     icon: 'BarChart3',
-    isBasic: true,
+    includedInPlans: ['trial', 'basic'],
     displayOrder: 6,
     dependencies: [],
   },

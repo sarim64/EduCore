@@ -1,4 +1,5 @@
 export * from './shared_props'
+export * from './invites'
 export * from './admin'
 export * from './academics'
 export * from './dashboard'

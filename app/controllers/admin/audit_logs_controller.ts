@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import AdminAuditLogDto from '#dtos/admin_audit_log'
-import ListAuditLogs from '#actions/admin/list_audit_logs'
+import ListAuditLogs from '#actions/superadmin/list_audit_logs'
 
 export default class AuditLogsController {
   async index({ inertia, request }: HttpContext) {
@@ -9,7 +9,7 @@ export default class AuditLogsController {
 
     const logs = await ListAuditLogs.handle({ page, limit })
 
-    return inertia.render('admin/audit-logs/index', {
+    return inertia.render('superadmin/audit-logs/index', {
       logs: {
         data: AdminAuditLogDto.fromArray(logs.all()),
         meta: logs.getMeta(),

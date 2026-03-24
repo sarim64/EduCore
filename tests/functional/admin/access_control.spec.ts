@@ -12,7 +12,7 @@ test.group('admin/access_control', () => {
     const response = await client.get('/admin').loginAs(user).withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/dashboard')
+    response.assertInertiaComponent('superadmin/dashboard')
   })
 
   // Verifies that super admin cannot access school routes without school membership
@@ -59,7 +59,7 @@ test.group('admin/access_control', () => {
     const response = await client.get('/admin/audit-logs').loginAs(user).withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('admin/audit-logs/index')
+    response.assertInertiaComponent('superadmin/audit-logs/index')
   })
 
   // Verifies that revoked super admin cannot access admin routes

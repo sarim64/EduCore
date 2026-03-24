@@ -18,7 +18,7 @@ export default class ForgotPasswordsController {
 
     session.flash(this.#sentSessionKey, true)
 
-    return response.redirect().toRoute('/auth/forgot-password')
+    return response.redirect().toRoute('forgot_password.index')
   }
 
   async reset({ params, inertia }: HttpContext) {
@@ -32,15 +32,13 @@ export default class ForgotPasswordsController {
     })
   }
 
-  async update({ request, response, session, auth }: HttpContext) {
+  async update({ request, response, session }: HttpContext) {
     const data = await request.validateUsing(passwordResetValidator)
 
-    const user = await ResetPassword.handle({ data })
+    await ResetPassword.handle({ data })
 
-    await auth.use('web').login(user)
+    session.flash('success', 'Your password has been reset. You can now sign in.')
 
-    session.flash('success', 'Your password is reset succesfully')
-
-    return response.redirect().toPath('/auth/login')
+    return response.redirect().toRoute('login.show')
   }
 }
