@@ -1,10 +1,11 @@
-const DashboardController = () => import('#controllers/admin/dashboard_controller')
-const SchoolsController = () => import('#controllers/admin/schools_controller')
-const SchoolAdminsController = () => import('#controllers/admin/school_admins_controller')
-const SubscriptionPlansController = () => import('#controllers/admin/subscription_plans_controller')
+const DashboardController = () => import('#controllers/superadmin/dashboard_controller')
+const SchoolsController = () => import('#controllers/superadmin/schools_controller')
+const SchoolAdminsController = () => import('#controllers/superadmin/school_admins_controller')
+const SubscriptionPlansController = () =>
+  import('#controllers/superadmin/subscription_plans_controller')
 const SchoolSubscriptionsController = () =>
-  import('#controllers/admin/school_subscriptions_controller')
-const AuditLogsController = () => import('#controllers/admin/audit_logs_controller')
+  import('#controllers/superadmin/school_subscriptions_controller')
+const AuditLogsController = () => import('#controllers/superadmin/audit_logs_controller')
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
@@ -16,12 +17,13 @@ router
 
     // Schools CRUD
     router.get('/schools', [SchoolsController, 'index']).as('admin.schools.index')
-    router.get('/schools/create', [SchoolsController, 'create']).as('admin.schools.create')
     router.post('/schools', [SchoolsController, 'store']).as('admin.schools.store')
     router.get('/schools/:id', [SchoolsController, 'show']).as('admin.schools.show')
-    router.get('/schools/:id/edit', [SchoolsController, 'edit']).as('admin.schools.edit')
     router.put('/schools/:id', [SchoolsController, 'update']).as('admin.schools.update')
     router.delete('/schools/:id', [SchoolsController, 'destroy']).as('admin.schools.destroy')
+    router.post('/schools/:id/suspend', [SchoolsController, 'suspend']).as('admin.schools.suspend')
+    router.post('/schools/:id/activate', [SchoolsController, 'activate']).as('admin.schools.activate')
+    router.post('/schools/:id/extend', [SchoolsController, 'extend']).as('admin.schools.extend')
     router.post('/schools/:id/enter', [SchoolsController, 'enterSchool']).as('admin.schools.enter')
     router.post('/schools/exit', [SchoolsController, 'exitSchool']).as('admin.schools.exit')
 
@@ -39,20 +41,22 @@ router
       .delete('/schools/:schoolId/admins/:id', [SchoolAdminsController, 'destroy'])
       .as('admin.schools.admins.destroy')
 
-    // Subscription Plans
+    // Subscription Plans (CRUD routes stay at /admin/plans)
     router
       .group(() => {
-        router.get('/', [SubscriptionPlansController, 'index']).as('index')
-        router.get('/create', [SubscriptionPlansController, 'create']).as('create')
         router.post('/', [SubscriptionPlansController, 'store']).as('store')
-        router.get('/:id/edit', [SubscriptionPlansController, 'edit']).as('edit')
         router.put('/:id', [SubscriptionPlansController, 'update']).as('update')
         router.delete('/:id', [SubscriptionPlansController, 'destroy']).as('destroy')
       })
       .prefix('plans')
       .as('admin.plans')
 
-    // School Subscription
+    // Subscriptions overview (new route — renders subscriptions/index page)
+    router
+      .get('/subscriptions', [SubscriptionPlansController, 'index'])
+      .as('admin.subscriptions.index')
+
+    // School Subscription (legacy per-school assignment page)
     router
       .get('/schools/:schoolId/subscription', [SchoolSubscriptionsController, 'show'])
       .as('admin.schools.subscription.show')

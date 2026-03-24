@@ -1,7 +1,7 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 
-const ReportsController = () => import('#controllers/reports_controller')
+const ReportsController = () => import('#controllers/school/reports_controller')
 
 router
   .group(() => {

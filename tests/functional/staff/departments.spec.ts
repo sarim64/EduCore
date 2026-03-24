@@ -22,7 +22,7 @@ test.group('staff/departments', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('staff/departments/index')
+    response.assertInertiaComponent('school/staff/departments/index')
   })
 
   // Ensures authenticated user can create a department

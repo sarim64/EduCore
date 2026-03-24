@@ -26,6 +26,13 @@ export const updatePlanValidator = vine.compile(
   })
 )
 
+export const extendSubscriptionValidator = vine.compile(
+  vine.object({
+    endDate: vine.date(),
+    notes: vine.string().trim().maxLength(500).optional(),
+  })
+)
+
 export const assignSubscriptionValidator = vine.compile(
   vine.object({
     planId: vine.string().uuid(),

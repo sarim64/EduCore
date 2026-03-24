@@ -10,6 +10,9 @@ export default class extends BaseSchema {
       table.string('code', 30).unique()
       table.text('address')
       table.string('phone', 20)
+      table.string('city')
+      table.string('province')
+      table.boolean('is_suspended').defaultTo(false)
       table.string('logo_url', 500)
       table.jsonb('settings').defaultTo('{}')
 

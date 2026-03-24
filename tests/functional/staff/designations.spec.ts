@@ -27,7 +27,7 @@ test.group('staff/designations', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('staff/designations/index')
+    response.assertInertiaComponent('school/staff/designations/index')
   })
 
   // Ensures authenticated user can create a designation

@@ -3,6 +3,8 @@ import User from '#models/user'
 import SuperAdmin from '#models/super_admin'
 import AdminAuditLog from '#models/admin_audit_log'
 import PasswordResetToken from '#models/password_reset_token'
+import SchoolSubscription from '#models/school_subscription'
+import SubscriptionPlan from '#models/subscription_plan'
 import { adminCreateSchoolValidator } from '#validators/admin'
 import { Infer } from '@vinejs/vine/types'
 import db from '@adonisjs/lucid/services/db'
@@ -32,10 +34,27 @@ export default class StoreSchool {
   constructor(protected ctx: HttpContext) {}
 
   async handle({ data, superAdmin }: Params) {
+    const trialPlan = await SubscriptionPlan.findBy('code', 'trial')
+
     const activation = await db.transaction<ActivationPayload>(async (trx) => {
       const { adminEmail, adminFirstName, adminLastName, ...schoolData } = data
 
       const school = await School.create(schoolData, { client: trx })
+
+      // Always assign Trial plan for 3 months on creation
+      if (trialPlan) {
+        await SchoolSubscription.create(
+          {
+            schoolId: school.id,
+            planId: trialPlan.id,
+            status: 'active',
+            startDate: DateTime.now(),
+            endDate: DateTime.now().plus({ months: 3 }),
+            createdBy: superAdmin.userId,
+          },
+          { client: trx }
+        )
+      }
 
       let activation: ActivationPayload = null
 

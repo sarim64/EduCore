@@ -1,16 +1,16 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 
-const AttendanceController = () => import('#controllers/attendance/attendance_controller')
-const LeaveTypesController = () => import('#controllers/attendance/leave_types_controller')
+const AttendanceController = () => import('#controllers/school/attendance/attendance_controller')
+const LeaveTypesController = () => import('#controllers/school/attendance/leave_types_controller')
 const StudentAttendancesController = () =>
-  import('#controllers/attendance/student_attendances_controller')
+  import('#controllers/school/attendance/student_attendances_controller')
 const StaffAttendancesController = () =>
-  import('#controllers/attendance/staff_attendances_controller')
+  import('#controllers/school/attendance/staff_attendances_controller')
 const LeaveApplicationsController = () =>
-  import('#controllers/attendance/leave_applications_controller')
+  import('#controllers/school/attendance/leave_applications_controller')
 const AttendanceReportsController = () =>
-  import('#controllers/attendance/attendance_reports_controller')
+  import('#controllers/school/attendance/attendance_reports_controller')
 
 router
   .group(() => {

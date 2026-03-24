@@ -24,6 +24,8 @@ export default class UpdateSchool {
         code: school.code,
         address: school.address,
         phone: school.phone,
+        city: school.city,
+        province: school.province,
       }
 
       school.useTransaction(trx)

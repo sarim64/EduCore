@@ -1,10 +1,11 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 
-const AcademicYearsController = () => import('#controllers/academics/academic_years_controller')
-const ClassesController = () => import('#controllers/academics/classes_controller')
-const SectionsController = () => import('#controllers/academics/sections_controller')
-const SubjectsController = () => import('#controllers/academics/subjects_controller')
+const AcademicYearsController = () =>
+  import('#controllers/school/academics/academic_years_controller')
+const ClassesController = () => import('#controllers/school/academics/classes_controller')
+const SectionsController = () => import('#controllers/school/academics/sections_controller')
+const SubjectsController = () => import('#controllers/school/academics/subjects_controller')
 
 router
   .group(() => {

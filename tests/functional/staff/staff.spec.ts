@@ -32,7 +32,7 @@ test.group('staff/staff', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('staff/members/index')
+    response.assertInertiaComponent('school/staff/members/index')
   })
 
   // Ensures authenticated user can create a staff member

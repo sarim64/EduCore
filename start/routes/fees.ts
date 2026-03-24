@@ -1,14 +1,16 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 
-const FeeCategoriesController = () => import('#controllers/fees/fee_categories_controller')
-const FeeStructuresController = () => import('#controllers/fees/fee_structures_controller')
-const FeeDiscountsController = () => import('#controllers/fees/fee_discounts_controller')
-const StudentDiscountsController = () => import('#controllers/fees/student_discounts_controller')
-const FeeChallansController = () => import('#controllers/fees/fee_challans_controller')
-const FeePaymentsController = () => import('#controllers/fees/fee_payments_controller')
-const FeeLedgerController = () => import('#controllers/fees/fee_ledger_controller')
-const FeeReportsController = () => import('#controllers/fees/fee_reports_controller')
+const FeeCategoriesController = () =>
+  import('#controllers/school/fees/fee_categories_controller')
+const FeeStructuresController = () => import('#controllers/school/fees/fee_structures_controller')
+const FeeDiscountsController = () => import('#controllers/school/fees/fee_discounts_controller')
+const StudentDiscountsController = () =>
+  import('#controllers/school/fees/student_discounts_controller')
+const FeeChallansController = () => import('#controllers/school/fees/fee_challans_controller')
+const FeePaymentsController = () => import('#controllers/school/fees/fee_payments_controller')
+const FeeLedgerController = () => import('#controllers/school/fees/fee_ledger_controller')
+const FeeReportsController = () => import('#controllers/school/fees/fee_reports_controller')
 
 router
   .group(() => {

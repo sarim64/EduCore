@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react'
 import { Head, Link, router } from '@inertiajs/react'
-import AdminLayout from '~/layouts/AdminLayout'
+import SuperAdminLayout from '~/layouts/SuperAdminLayout'
 import { Button } from '~/components/ui/button'
 import {
   Table,
@@ -112,4 +112,4 @@ export default function AdminSchoolAdminsIndexPage({
   )
 }
 
-AdminSchoolAdminsIndexPage.layout = (page: ReactElement) => <AdminLayout>{page}</AdminLayout>
+AdminSchoolAdminsIndexPage.layout = (page: ReactElement) => <SuperAdminLayout>{page}</SuperAdminLayout>

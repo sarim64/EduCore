@@ -17,6 +17,7 @@ export default class SchoolSubscriptionDto extends BaseModelDto {
   declare createdAt: string
   declare updatedAt: string | null
   declare plan: SubscriptionPlanDto | null
+  declare school: { id: string; name: string } | null
 
   constructor(subscription?: SchoolSubscription) {
     super()
@@ -36,5 +37,6 @@ export default class SchoolSubscriptionDto extends BaseModelDto {
     this.createdAt = subscription.createdAt.toISO()!
     this.updatedAt = subscription.updatedAt?.toISO() ?? null
     this.plan = subscription.plan ? new SubscriptionPlanDto(subscription.plan) : null
+    this.school = subscription.school ? { id: subscription.school.id, name: subscription.school.name } : null
   }
 }

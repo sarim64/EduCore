@@ -6,8 +6,10 @@ export const adminCreateSchoolValidator = vine.compile(
     code: vine.string().trim().maxLength(30).optional(),
     address: vine.string().trim().optional(),
     phone: vine.string().trim().maxLength(20).optional(),
-    adminEmail: vine.string().email().maxLength(254).optional(),
-    adminFirstName: vine.string().trim().maxLength(100).optional(),
+    city: vine.string().trim().maxLength(100).optional(),
+    province: vine.string().trim().maxLength(100).optional(),
+    adminEmail: vine.string().email().maxLength(254),
+    adminFirstName: vine.string().trim().maxLength(100),
     adminLastName: vine.string().trim().maxLength(100).optional(),
   })
 )
@@ -18,6 +20,8 @@ export const adminUpdateSchoolValidator = vine.compile(
     code: vine.string().trim().maxLength(30).optional(),
     address: vine.string().trim().optional(),
     phone: vine.string().trim().maxLength(20).optional(),
+    city: vine.string().trim().maxLength(100).optional(),
+    province: vine.string().trim().maxLength(100).optional(),
   })
 )
 

@@ -48,7 +48,7 @@ test.group('staff/teacher-assignments', () => {
       .withInertia()
 
     response.assertStatus(200)
-    response.assertInertiaComponent('staff/teacher-assignments/index')
+    response.assertInertiaComponent('school/staff/teacher-assignments/index')
   })
 
   // Ensures authenticated user can create a teacher assignment

@@ -23,6 +23,15 @@ export default class School extends BaseModel {
   declare phone: string | null
 
   @column()
+  declare city: string | null
+
+  @column()
+  declare province: string | null
+
+  @column()
+  declare isSuspended: boolean
+
+  @column()
   declare logoUrl: string | null
 
   @column()
@@ -37,8 +46,13 @@ export default class School extends BaseModel {
   @hasMany(() => SchoolInvite)
   declare invites: HasMany<typeof SchoolInvite>
 
-  @hasOne(() => SchoolSubscription)
+  @hasOne(() => SchoolSubscription, {
+    onQuery: (query) => query.where('status', 'active').orderBy('start_date', 'desc'),
+  })
   declare subscription: HasOne<typeof SchoolSubscription>
+
+  @hasMany(() => SchoolSubscription)
+  declare subscriptions: HasMany<typeof SchoolSubscription>
 
   @hasMany(() => AuditLog)
   declare auditLogs: HasMany<typeof AuditLog>
