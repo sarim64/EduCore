@@ -12,9 +12,10 @@ import {
   Building2,
   ClipboardList,
   CreditCard,
-  Mail,
+  ShieldCheck,
 } from 'lucide-react'
 import { Link, usePage, router } from '@inertiajs/react'
+import { Separator } from '~/components/ui/separator'
 
 import {
   Sidebar,
@@ -189,18 +190,19 @@ function NavItem({ item }: { item: MenuItem }) {
 const SCHOOL_ADMIN_ROLE = 2
 
 export function AppSidebar() {
-  const { isSuperAdmin, currentSchool, userRole } = usePage<{
+  const page = usePage<{
     isSuperAdmin: boolean
     currentSchool: { id: string; name: string } | null
     userRole: number | null
-  }>().props
+  }>()
+  const { isSuperAdmin, currentSchool, userRole } = page.props
+  const currentUrl = page.url
 
   const isSchoolAdmin = userRole === SCHOOL_ADMIN_ROLE || isSuperAdmin
 
   const handleExitSchool = () => {
     router.post('/admin/schools/exit')
   }
-
 
   return (
     <Sidebar collapsible="icon">
@@ -218,7 +220,7 @@ export function AppSidebar() {
         </a>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Main */}
         <SidebarGroup>
           <SidebarGroupLabel>Main</SidebarGroupLabel>
@@ -237,7 +239,7 @@ export function AppSidebar() {
           <>
             {/* Academic */}
             <SidebarGroup>
-              <SidebarGroupLabel>Academic</SidebarGroupLabel>
+              <SidebarGroupLabel>ACADEMICS</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {academicsItems.map((item) => (
@@ -250,9 +252,11 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
+            <Separator className="mx-2 w-auto" />
+
             {/* Management */}
             <SidebarGroup>
-              <SidebarGroupLabel>Management</SidebarGroupLabel>
+              <SidebarGroupLabel>MANAGEMENT</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {staffItems.map((item) => (
@@ -261,38 +265,111 @@ export function AppSidebar() {
                   {attendanceItems.map((item) => (
                     <NavItem key={item.url} item={item} />
                   ))}
-                  {isSchoolAdmin && (
-                    <NavItem
-                      item={{ title: 'Invitations', url: '/invites', icon: Mail }}
-                    />
-                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Financial */}
-            <SidebarGroup>
-              <SidebarGroupLabel>Financial</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {feesItems.map((item) => (
-                    <NavItem key={item.url} item={item} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <Separator className="mx-2 w-auto" />
 
-            {/* Analytics */}
-            <SidebarGroup>
-              <SidebarGroupLabel>Analytics</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {reportsItems.map((item) => (
-                    <NavItem key={item.url} item={item} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            {/* Fee Management */}
+            <Collapsible defaultOpen={currentUrl.startsWith('/fees')} className="group/fee-mgmt">
+              <SidebarGroup>
+                <SidebarGroupLabel asChild>
+                  <CollapsibleTrigger className="flex w-full items-center justify-between hover:text-sidebar-accent-foreground cursor-pointer">
+                    <span className="flex items-center gap-2"><Receipt className="h-4 w-4" />FEE MANAGEMENT</span>
+                    <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/fee-mgmt:rotate-180" />
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuSub>
+                        {feesItems[0].items?.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.url}>
+                            <SidebarMenuSubButton asChild isActive={currentUrl === subItem.url}>
+                              <Link href={subItem.url}>{subItem.title}</Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
+
+            <Separator className="mx-2 w-auto" />
+
+            {/* Reports */}
+            <Collapsible defaultOpen={currentUrl.startsWith('/reports')} className="group/reports">
+              <SidebarGroup>
+                <SidebarGroupLabel asChild>
+                  <CollapsibleTrigger className="flex w-full items-center justify-between hover:text-sidebar-accent-foreground cursor-pointer">
+                    <span className="flex items-center gap-2"><BarChart3 className="h-4 w-4" />REPORTS</span>
+                    <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/reports:rotate-180" />
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuSub>
+                        {reportsItems[0].items?.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.url}>
+                            <SidebarMenuSubButton asChild isActive={currentUrl === subItem.url}>
+                              <Link href={subItem.url}>{subItem.title}</Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
+
+            <Separator className="mx-2 w-auto" />
+
+            {/* Admin */}
+            {isSchoolAdmin && (
+              <Collapsible
+                defaultOpen={
+                  currentUrl.startsWith('/users') ||
+                  currentUrl.startsWith('/invites') ||
+                  currentUrl.startsWith('/access-control') ||
+                  currentUrl.startsWith('/audit-logs')
+                }
+                className="group/admin"
+              >
+                <SidebarGroup>
+                  <SidebarGroupLabel asChild>
+                    <CollapsibleTrigger className="flex w-full items-center justify-between hover:text-sidebar-accent-foreground cursor-pointer">
+                      <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" />ADMIN</span>
+                      <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/admin:rotate-180" />
+                    </CollapsibleTrigger>
+                  </SidebarGroupLabel>
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuSub>
+                          {[
+                            { title: 'All Users', url: '/users' },
+                            { title: 'Invitations', url: '/invites' },
+                            { title: 'Access Control', url: '/access-control' },
+                            { title: 'Audit Logs', url: '/audit-logs' },
+                          ].map((item) => (
+                            <SidebarMenuSubItem key={item.url}>
+                              <SidebarMenuSubButton asChild isActive={currentUrl === item.url}>
+                                <Link href={item.url}>{item.title}</Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </SidebarGroup>
+              </Collapsible>
+            )}
           </>
         )}
       </SidebarContent>

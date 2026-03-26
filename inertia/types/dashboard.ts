@@ -9,6 +9,8 @@ export type SchoolAdminDashboardStats = {
   staff: {
     total: number
     active: number
+    teachersCount: number // staff linked to school_users with role TEACHER
+    supportCount: number  // active - teachersCount
     departments: { name: string; count: number }[]
   }
   classes: {
@@ -21,57 +23,34 @@ export type SchoolAdminDashboardStats = {
     todayStaffRate: number
     todayPresent: number
     todayAbsent: number
+    todayStaffAbsent: number
     weeklyTrend: { date: string; rate: number }[]
   }
+  fees: {
+    todayAmount: number
+    todayPaymentCount: number
+    monthAmount: number
+    previousMonthAmount: number // for % change label — not a "target"
+    trend: { date: string; amount: number }[] // last 14 days, ISO dates
+    trendTotal: number
+    trendAvgPerDay: number
+    trendChangePercent: number // vs prior 14 days
+  }
+  subscription: {
+    planName: string     // plan.name or 'Custom' if planId is null
+    status: string
+    maxStudents: number  // resolved: sub.maxStudents ?? plan.maxStudents
+    maxStaff: number
+    expiryDate: string | null  // ISO date or null if open-ended
+    daysRemaining: number | null
+  } | null
 }
 
-export type PrincipalDashboardStats = {
-  overview: {
-    totalStudents: number
-    activeStudents: number
-    totalStaff: number
-    activeStaff: number
-    totalClasses: number
-    totalSections: number
-  }
-  attendance: {
-    studentAttendanceRate: number
-    staffAttendanceRate: number
-    weeklyTrend: { date: string; studentRate: number; staffRate: number }[]
-    lowAttendanceClasses: {
-      className: string
-      sectionName: string | null
-      rate: number
-      totalStudents: number
-    }[]
-  }
-  academics: {
-    classPerformance: {
-      className: string
-      averageScore: number
-      passRate: number
-    }[]
-    topPerformers: {
-      studentName: string
-      className: string
-      averageScore: number
-    }[]
-    subjectPerformance: {
-      subject: string
-      averageScore: number
-      passRate: number
-    }[]
-  }
-  staffMetrics: {
-    departmentDistribution: { department: string; count: number }[]
-    teacherStudentRatio: number
-    averageExperience: number
-  }
-  alerts: {
-    type: 'warning' | 'info' | 'success'
-    message: string
-    date: string
-  }[]
+export type CanSeeFlags = {
+  fees: boolean
+  subscription: boolean
+  attendance: boolean
+  staff: boolean
 }
 
 export type TeacherDashboardStats = {

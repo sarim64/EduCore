@@ -66,6 +66,16 @@ export default class DashboardController {
     }
 
     const stats = await DashboardService.getSchoolAdminStats(schoolId)
-    return inertia.render('home', { stats })
+
+    const canSee = superAdmin
+      ? { fees: true, subscription: true, attendance: true, staff: true }
+      : {
+          fees: [Roles.SCHOOL_ADMIN, Roles.ACCOUNTANT].includes(roleId),
+          subscription: roleId === Roles.SCHOOL_ADMIN,
+          attendance: [Roles.SCHOOL_ADMIN, Roles.PRINCIPAL, Roles.VICE_PRINCIPAL, Roles.SUPPORT_STAFF].includes(roleId),
+          staff: [Roles.SCHOOL_ADMIN, Roles.PRINCIPAL, Roles.VICE_PRINCIPAL].includes(roleId),
+        }
+
+    return inertia.render('school/dashboards/admin', { stats, canSee })
   }
 }

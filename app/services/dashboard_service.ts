@@ -5,91 +5,34 @@ import StudentAttendance from '#models/student_attendance'
 import StaffAttendance from '#models/staff_attendance'
 import TeacherAssignment from '#models/teacher_assignment'
 import AcademicYear from '#models/academic_year'
+import SchoolSubscription from '#models/school_subscription'
+import Roles from '#enums/roles'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 
-export interface SchoolAdminDashboardStats {
-  students: {
-    total: number
-    active: number
-    inactive: number
-    newThisMonth: number
-    genderDistribution: { gender: string; count: number }[]
-  }
-  staff: {
-    total: number
-    active: number
-    departments: { name: string; count: number }[]
-  }
-  classes: {
-    total: number
-    totalSections: number
-    classStrength: { className: string; students: number }[]
-  }
-  attendance: {
-    todayStudentRate: number
-    todayStaffRate: number
-    todayPresent: number
-    todayAbsent: number
-    weeklyTrend: { date: string; rate: number }[]
-  }
-}
-
-export interface TeacherDashboardStats {
-  profile: {
-    staffMemberId: string
-    name: string
-    department: string | null
-    designation: string | null
-  }
-  assignments: {
-    total: number
-    classTeacherOf: { className: string; sectionName: string | null }[]
-    subjects: { className: string; sectionName: string | null; subjectName: string }[]
-  }
-  todayClasses: {
-    className: string
-    sectionName: string | null
-    subjectName: string
-  }[]
-  attendance: {
-    myClassesToday: {
-      className: string
-      sectionName: string | null
-      present: number
-      absent: number
-      total: number
-      rate: number
-    }[]
-  }
-  recentAttendanceMarked: {
-    date: string
-    className: string
-    sectionName: string | null
-    markedCount: number
-  }[]
-}
-
-
 export default class DashboardService {
-  static async getSchoolAdminStats(schoolId: string): Promise<SchoolAdminDashboardStats> {
+  static async getSchoolAdminStats(schoolId: string) {
     const today = DateTime.now()
     const startOfMonth = today.startOf('month')
     const startOfWeek = today.startOf('week')
 
-    // Parallel fetch for all stats
-    const [studentStats, staffStats, classStats, attendanceStats] = await Promise.all([
-      this.getStudentStats(schoolId, startOfMonth),
-      this.getStaffStats(schoolId),
-      this.getClassStats(schoolId),
-      this.getAttendanceStats(schoolId, today, startOfWeek),
-    ])
+    const [studentStats, staffStats, classStats, attendanceStats, feeStats, subscriptionStats] =
+      await Promise.all([
+        this.getStudentStats(schoolId, startOfMonth),
+        this.getStaffStats(schoolId),
+        this.getClassStats(schoolId),
+        this.getAttendanceStats(schoolId, today, startOfWeek),
+        this.getFeeStats(schoolId),
+        this.getSubscriptionStats(schoolId),
+      ])
 
     return {
       students: studentStats,
       staff: staffStats,
       classes: classStats,
       attendance: attendanceStats,
+      fees: feeStats,
+      subscription: subscriptionStats,
     }
   }
 
@@ -107,7 +50,6 @@ export default class DashboardService {
     const active = Number(activeResult[0].$extras.total)
     const newThisMonth = Number(newThisMonthResult[0].$extras.total)
 
-    // Gender distribution
     const genderData = await db
       .from('students')
       .where('school_id', schoolId)
@@ -139,7 +81,22 @@ export default class DashboardService {
     const total = Number(totalResult[0].$extras.total)
     const active = Number(activeResult[0].$extras.total)
 
-    // Department distribution
+    const teacherRow = await db
+      .from('staff_members')
+      .join('school_users', (query) => {
+        query
+          .on('staff_members.user_id', 'school_users.user_id')
+          .andOnVal('school_users.school_id', schoolId)
+          .andOnVal('school_users.role_id', Roles.TEACHER)
+      })
+      .where('staff_members.school_id', schoolId)
+      .where('staff_members.status', 'active')
+      .count('* as count')
+      .first()
+
+    const teachersCount = Number(teacherRow?.count ?? 0)
+    const supportCount = active - teachersCount
+
     const deptData = await db
       .from('staff_members')
       .leftJoin('departments', 'staff_members.department_id', 'departments.id')
@@ -154,13 +111,12 @@ export default class DashboardService {
       count: Number(d.count),
     }))
 
-    return { total, active, departments }
+    return { total, active, teachersCount, supportCount, departments }
   }
 
   private static async getClassStats(schoolId: string) {
     const classes = await SchoolClass.query().where('schoolId', schoolId).withCount('sections')
 
-    // Get student count per class from enrollments
     const currentYear = await AcademicYear.query()
       .where('schoolId', schoolId)
       .where('isCurrent', true)
@@ -202,7 +158,6 @@ export default class DashboardService {
   ) {
     const todayStr = today.toISODate()!
 
-    // Today's student attendance
     const [todayStudentData, totalActiveStudents] = await Promise.all([
       StudentAttendance.query()
         .where('schoolId', schoolId)
@@ -228,7 +183,6 @@ export default class DashboardService {
 
     const todayStudentRate = totalStudents > 0 ? (todayPresent / totalStudents) * 100 : 0
 
-    // Today's staff attendance
     const [todayStaffData, totalActiveStaff] = await Promise.all([
       StaffAttendance.query()
         .where('schoolId', schoolId)
@@ -241,8 +195,8 @@ export default class DashboardService {
     const totalStaff = Number(totalActiveStaff[0].$extras.total)
     const staffPresent = Number(todayStaffData[0].$extras.count)
     const todayStaffRate = totalStaff > 0 ? (staffPresent / totalStaff) * 100 : 0
+    const todayStaffAbsent = totalStaff - staffPresent
 
-    // Weekly trend
     const weeklyData = await db
       .from('student_attendances')
       .where('school_id', schoolId)
@@ -268,17 +222,123 @@ export default class DashboardService {
       todayStaffRate: Math.round(todayStaffRate),
       todayPresent,
       todayAbsent,
+      todayStaffAbsent,
       weeklyTrend,
     }
   }
 
-  static async getTeacherStats(
-    schoolId: string,
-    staffMemberId: string
-  ): Promise<TeacherDashboardStats> {
+  private static async getFeeStats(schoolId: string) {
+    const today = DateTime.now()
+    const todayStr = today.toISODate()!
+    const startOfMonth = today.startOf('month').toISODate()!
+    const startOfPrevMonth = today.minus({ months: 1 }).startOf('month').toISODate()!
+    const endOfPrevMonth = today.startOf('month').minus({ days: 1 }).toISODate()!
+    const fourteenDaysAgo = today.minus({ days: 13 }).toISODate()!
+    const priorWindowStart = today.minus({ days: 27 }).toISODate()!
+    const priorWindowEnd = today.minus({ days: 14 }).toISODate()!
+
+    const [todayRow, monthRow, prevMonthRow, trendRows, priorRow] = await Promise.all([
+      db.from('fee_payments')
+        .where('school_id', schoolId)
+        .where('is_cancelled', false)
+        .whereRaw('payment_date = ?', [todayStr])
+        .select(db.raw('COALESCE(SUM(amount), 0) as total'))
+        .count('* as count')
+        .first(),
+
+      db.from('fee_payments')
+        .where('school_id', schoolId)
+        .where('is_cancelled', false)
+        .whereRaw('payment_date >= ?', [startOfMonth])
+        .whereRaw('payment_date <= ?', [todayStr])
+        .select(db.raw('COALESCE(SUM(amount), 0) as total'))
+        .first(),
+
+      db.from('fee_payments')
+        .where('school_id', schoolId)
+        .where('is_cancelled', false)
+        .whereRaw('payment_date >= ?', [startOfPrevMonth])
+        .whereRaw('payment_date <= ?', [endOfPrevMonth])
+        .select(db.raw('COALESCE(SUM(amount), 0) as total'))
+        .first(),
+
+      db.from('fee_payments')
+        .where('school_id', schoolId)
+        .where('is_cancelled', false)
+        .whereRaw('payment_date >= ?', [fourteenDaysAgo])
+        .whereRaw('payment_date <= ?', [todayStr])
+        .select('payment_date')
+        .select(db.raw('COALESCE(SUM(amount), 0) as amount'))
+        .groupBy('payment_date')
+        .orderBy('payment_date'),
+
+      db.from('fee_payments')
+        .where('school_id', schoolId)
+        .where('is_cancelled', false)
+        .whereRaw('payment_date >= ?', [priorWindowStart])
+        .whereRaw('payment_date <= ?', [priorWindowEnd])
+        .select(db.raw('COALESCE(SUM(amount), 0) as total'))
+        .first(),
+    ])
+
+    const trendMap = new Map<string, number>()
+    for (const row of trendRows) {
+      trendMap.set(DateTime.fromJSDate(row.payment_date).toISODate()!, Number(row.amount))
+    }
+
+    const trend = Array.from({ length: 14 }, (_, i) => {
+      const date = today.minus({ days: 13 - i }).toISODate()!
+      return { date, amount: trendMap.get(date) ?? 0 }
+    })
+
+    const trendTotal = trend.reduce((sum, d) => sum + d.amount, 0)
+    const trendAvgPerDay = Math.round(trendTotal / 14)
+    const priorTotal = Number(priorRow?.total ?? 0)
+    const trendChangePercent =
+      priorTotal > 0 ? Math.round(((trendTotal - priorTotal) / priorTotal) * 100) : 0
+
+    return {
+      todayAmount: Number(todayRow?.total ?? 0),
+      todayPaymentCount: Number(todayRow?.count ?? 0),
+      monthAmount: Number(monthRow?.total ?? 0),
+      previousMonthAmount: Number(prevMonthRow?.total ?? 0),
+      trend,
+      trendTotal,
+      trendAvgPerDay,
+      trendChangePercent,
+    }
+  }
+
+  private static async getSubscriptionStats(schoolId: string) {
+    const sub = await SchoolSubscription.query()
+      .where('schoolId', schoolId)
+      .whereIn('status', ['active', 'trial'])
+      .preload('plan')
+      .orderBy('createdAt', 'desc')
+      .first()
+
+    if (!sub) return null
+
+    const maxStudents = sub.maxStudents ?? sub.plan?.maxStudents ?? 0
+    const maxStaff = sub.maxStaff ?? sub.plan?.maxStaff ?? 0
+    const planName = sub.plan?.name ?? 'Custom'
+    const daysRemaining = sub.endDate
+      ? Math.max(0, Math.ceil(sub.endDate.diff(DateTime.now(), 'days').days))
+      : null
+
+    return {
+      planName,
+      status: sub.status,
+      maxStudents,
+      maxStaff,
+      expiryDate: sub.endDate?.toISODate() ?? null,
+      daysRemaining,
+    }
+  }
+
+  static async getTeacherStats(schoolId: string, staffMemberId: string) {
     const today = DateTime.now()
 
-    // Get staff profile
     const staff = await Staff.query()
       .where('id', staffMemberId)
       .where('schoolId', schoolId)
@@ -286,7 +346,6 @@ export default class DashboardService {
       .preload('designation')
       .firstOrFail()
 
-    // Get current academic year
     const currentYear = await AcademicYear.query()
       .where('schoolId', schoolId)
       .where('isCurrent', true)
@@ -307,7 +366,6 @@ export default class DashboardService {
       }
     }
 
-    // Get assignments
     const assignments = await TeacherAssignment.query()
       .where('schoolId', schoolId)
       .where('staffMemberId', staffMemberId)
@@ -329,7 +387,6 @@ export default class DashboardService {
       subjectName: a.subject.name,
     }))
 
-    // Get unique classes for today's attendance
     const uniqueClasses = new Map<
       string,
       { classId: string; sectionId: string | null; className: string; sectionName: string | null }
@@ -346,9 +403,8 @@ export default class DashboardService {
       }
     })
 
-    // Get attendance for my classes today
     const todayStr = today.toISODate()!
-    const myClassesToday: TeacherDashboardStats['attendance']['myClassesToday'] = []
+    const myClassesToday: { className: string; sectionName: string | null; present: number; absent: number; total: number; rate: number }[] = []
 
     for (const classInfo of uniqueClasses.values()) {
       let query = StudentAttendance.query()
@@ -388,7 +444,6 @@ export default class DashboardService {
       }
     }
 
-    // Get recent attendance marked by this teacher
     const recentMarked = await db
       .from('student_attendances')
       .join('classes', 'student_attendances.class_id', 'classes.id')
@@ -422,10 +477,9 @@ export default class DashboardService {
         classTeacherOf,
         subjects,
       },
-      todayClasses: subjects, // Simplified - would need timetable for actual today's classes
+      todayClasses: subjects,
       attendance: { myClassesToday },
       recentAttendanceMarked,
     }
   }
-
 }
