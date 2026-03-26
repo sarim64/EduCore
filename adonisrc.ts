@@ -82,6 +82,7 @@ export default defineConfig({
     () => import('#start/routes/reports'),
     () => import('#start/routes/admin'),
     () => import('#start/routes/invites'),
+    () => import('#start/routes/access_control'),
   ],
 
   /*

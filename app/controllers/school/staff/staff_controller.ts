@@ -1,4 +1,3 @@
-import User from '#models/user'
 import StaffDto from '#dtos/staff_member'
 import DepartmentDto from '#dtos/department'
 import DesignationDto from '#dtos/designation'
@@ -6,14 +5,15 @@ import ListStaff from '#actions/school/staff/staff/list_staff'
 import GetStaff from '#actions/school/staff/staff/get_staff'
 import StoreStaff from '#actions/school/staff/staff/store_staff'
 import UpdateStaff from '#actions/school/staff/staff/update_staff'
+import DeleteStaff from '#actions/school/staff/staff/delete_staff'
 import LinkStaffUser from '#actions/school/staff/staff/link_staff_user'
 import UnlinkStaffUser from '#actions/school/staff/staff/unlink_staff_user'
+import GetLinkUserPageData from '#actions/school/staff/staff/get_link_user_page_data'
 import ListDepartments from '#actions/school/staff/department/list_departments'
 import ListDesignations from '#actions/school/staff/designation/list_designations'
 import { createStaffValidator, updateStaffValidator } from '#validators/staff'
 import { linkUserValidator } from '#validators/staff_user'
 import type { HttpContext } from '@adonisjs/core/http'
-import db from '@adonisjs/lucid/services/db'
 
 export default class StaffController {
   async index({ session, inertia }: HttpContext) {
@@ -109,12 +109,8 @@ export default class StaffController {
 
   async destroy({ params, response, session }: HttpContext) {
     const schoolId = session.get('schoolId')
-    const staff = await GetStaff.handle({
-      staffMemberId: params.id,
-      schoolId,
-    })
 
-    await staff.delete()
+    await DeleteStaff.handle(params.id, schoolId)
 
     session.flash('success', 'Staff member deleted successfully')
     return response.redirect().toRoute('staff.members.index')
@@ -185,63 +181,12 @@ export default class StaffController {
       schoolId,
     })
 
-    // Get users from this school who are not already linked to staff in this school
-    const { default: Staff } = await import('#models/staff_member')
-    const linkedUserIdsQuery = Staff.query()
-      .where('schoolId', schoolId)
-      .whereNotNull('userId')
-      .select('userId')
-    const schoolUserIdsQuery = db.from('school_users').where('school_id', schoolId).select('user_id')
-
-    const users = await User.query()
-      .whereIn('id', schoolUserIdsQuery)
-      .whereNotIn('id', linkedUserIdsQuery)
-      .whereNotIn('id', db.from('super_admins').whereNull('revoked_at').select('user_id'))
-      .orderBy('firstName', 'asc')
-
-    let matchedEmailUser: null | {
-      id: string
-      firstName: string
-      lastName: string | null
-      email: string
-      fullName: string
-      isInCurrentSchool: boolean
-    } = null
-
-    if (staff.email) {
-      const existingByEmail = await User.query()
-        .where('email', staff.email)
-        .whereNotIn('id', db.from('super_admins').whereNull('revoked_at').select('user_id'))
-        .first()
-
-      if (existingByEmail) {
-        const inSchool = await db
-          .from('school_users')
-          .where('school_id', schoolId)
-          .where('user_id', existingByEmail.id)
-          .first()
-
-        matchedEmailUser = {
-          id: existingByEmail.id,
-          firstName: existingByEmail.firstName,
-          lastName: existingByEmail.lastName,
-          email: existingByEmail.email,
-          fullName: `${existingByEmail.firstName} ${existingByEmail.lastName ?? ''}`.trim(),
-          isInCurrentSchool: !!inSchool,
-        }
-      }
-    }
+    const { users, matchedEmailUser } = await GetLinkUserPageData.handle(staff, schoolId)
 
     return inertia.render('school/staff/members/link-user', {
       staff: new StaffDto(staff),
       matchedEmailUser,
-      users: users.map((u) => ({
-        id: u.id,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        email: u.email,
-        fullName: `${u.firstName} ${u.lastName ?? ''}`.trim(),
-      })),
+      users,
     })
   }
 }

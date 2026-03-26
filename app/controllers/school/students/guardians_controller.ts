@@ -3,6 +3,8 @@ import GetGuardian from '#actions/school/students/guardian/get_guardian'
 import StoreGuardian from '#actions/school/students/guardian/store_guardian'
 import UpdateGuardian from '#actions/school/students/guardian/update_guardian'
 import DeleteGuardian from '#actions/school/students/guardian/delete_guardian'
+import AttachGuardianToStudent from '#actions/school/students/guardian/attach_guardian_to_student'
+import DetachGuardianFromStudent from '#actions/school/students/guardian/detach_guardian_from_student'
 import GuardianDto from '#dtos/guardian'
 import {
   createGuardianValidator,
@@ -10,7 +12,6 @@ import {
   attachGuardianValidator,
 } from '#validators/guardian'
 import type { HttpContext } from '@adonisjs/core/http'
-import db from '@adonisjs/lucid/services/db'
 
 export default class GuardiansController {
   async index({ session, inertia }: HttpContext) {
@@ -36,27 +37,14 @@ export default class GuardiansController {
     const guardian = await StoreGuardian.handle({ schoolId, data })
 
     if (studentId) {
-      const { default: Student } = await import('#models/student')
-      const student = await Student.query()
-        .where('id', studentId)
-        .where('schoolId', schoolId)
-        .firstOrFail()
-
-      const exists = await db
-        .from('student_guardians')
-        .where('student_id', student.id)
-        .where('guardian_id', guardian.id)
-        .first()
-
-      if (!exists) {
-        await student.related('guardians').attach({
-          [guardian.id]: {
-            is_primary: false,
-            is_emergency_contact: false,
-            can_pickup: true,
-          },
-        })
-      }
+      await AttachGuardianToStudent.handle({
+        studentId,
+        guardianId: guardian.id,
+        schoolId,
+        isPrimary: false,
+        isEmergencyContact: false,
+        canPickup: true,
+      })
 
       session.flash('success', 'Guardian created and attached to student')
       return response.redirect().toRoute('students.show', { id: studentId })
@@ -97,59 +85,37 @@ export default class GuardiansController {
     return response.redirect().toRoute('guardians.index')
   }
 
-  // Attach guardian to student
   async attachToStudent({ params, request, response, session }: HttpContext) {
     const schoolId = session.get('schoolId')
     const { studentId } = params
     const data = await request.validateUsing(attachGuardianValidator)
 
-    // Verify student belongs to school
-    const { default: Student } = await import('#models/student')
-    const student = await Student.query()
-      .where('id', studentId)
-      .where('schoolId', schoolId)
-      .firstOrFail()
-
-    // Verify guardian belongs to school
-    const { default: Guardian } = await import('#models/guardian')
-    await Guardian.query().where('id', data.guardianId).where('schoolId', schoolId).firstOrFail()
-
-    const exists = await db
-      .from('student_guardians')
-      .where('student_id', studentId)
-      .where('guardian_id', data.guardianId)
-      .first()
-
-    if (exists) {
-      session.flash('error', 'Guardian is already linked to this student')
-      return response.redirect().back()
+    try {
+      await AttachGuardianToStudent.handle({
+        studentId,
+        guardianId: data.guardianId,
+        schoolId,
+        isPrimary: data.isPrimary ?? false,
+        isEmergencyContact: data.isEmergencyContact ?? false,
+        canPickup: data.canPickup ?? true,
+      })
+    } catch (error) {
+      if (error?.code === 'E_DUPLICATE_GUARDIAN_LINK') {
+        session.flash('error', error.message)
+        return response.redirect().back()
+      }
+      throw error
     }
-
-    // Attach guardian to student
-    await student.related('guardians').attach({
-      [data.guardianId]: {
-        is_primary: data.isPrimary ?? false,
-        is_emergency_contact: data.isEmergencyContact ?? false,
-        can_pickup: data.canPickup ?? true,
-      },
-    })
 
     session.flash('success', 'Guardian attached to student')
     return response.redirect().back()
   }
 
-  // Detach guardian from student
   async detachFromStudent({ params, response, session }: HttpContext) {
     const schoolId = session.get('schoolId')
     const { studentId, guardianId } = params
 
-    const { default: Student } = await import('#models/student')
-    const student = await Student.query()
-      .where('id', studentId)
-      .where('schoolId', schoolId)
-      .firstOrFail()
-
-    await student.related('guardians').detach([guardianId])
+    await DetachGuardianFromStudent.handle(studentId, guardianId, schoolId)
 
     session.flash('success', 'Guardian removed from student')
     return response.redirect().back()

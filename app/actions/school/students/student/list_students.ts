@@ -5,10 +5,11 @@ type Params = {
   classId?: string
   sectionId?: string
   search?: string
+  status?: string
 }
 
 export default class ListStudents {
-  static async handle({ schoolId, classId, sectionId, search }: Params) {
+  static async handle({ schoolId, classId, sectionId, search, status }: Params) {
     let query = Student.query()
       .where('schoolId', schoolId)
       .preload('guardians')
@@ -26,6 +27,10 @@ export default class ListStudents {
       query = query.whereHas('enrollments', (enrollmentQuery) => {
         enrollmentQuery.where('sectionId', sectionId).where('status', 'active')
       })
+    }
+
+    if (status) {
+      query = query.where('status', status)
     }
 
     if (search) {

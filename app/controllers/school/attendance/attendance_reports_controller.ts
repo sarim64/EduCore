@@ -1,5 +1,5 @@
-import SchoolClass from '#models/school_class'
-import Student from '#models/student'
+import ListClasses from '#actions/school/academics/class/list_classes'
+import GetStudent from '#actions/school/students/student/get_student'
 import AttendanceReportService from '#services/attendance_report_service'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
@@ -8,20 +8,14 @@ export default class AttendanceReportsController {
   async index({ session, inertia }: HttpContext) {
     const schoolId = session.get('schoolId')
 
-    // Get classes for filter dropdown
-    const classes = await SchoolClass.query()
-      .where('schoolId', schoolId)
-      .preload('sections')
-      .orderBy('name', 'asc')
-
-    const classesData = classes.map((c) => ({
-      id: c.id,
-      name: c.name,
-      sections: c.sections.map((s) => ({ id: s.id, name: s.name })),
-    }))
+    const classes = await ListClasses.handle({ schoolId })
 
     return inertia.render('school/attendance/reports/index', {
-      classes: classesData,
+      classes: classes.map((c) => ({
+        id: c.id,
+        name: c.name,
+        sections: c.sections.map((s) => ({ id: s.id, name: s.name })),
+      })),
     })
   }
 
@@ -31,11 +25,7 @@ export default class AttendanceReportsController {
     const sectionId = request.input('sectionId')
     const dateStr = request.input('date', DateTime.now().toISODate())
 
-    const classes = await SchoolClass.query()
-      .where('schoolId', schoolId)
-      .preload('sections')
-      .orderBy('name', 'asc')
-
+    const classes = await ListClasses.handle({ schoolId })
     const classesData = classes.map((c) => ({
       id: c.id,
       name: c.name,
@@ -69,11 +59,7 @@ export default class AttendanceReportsController {
     const year = request.input('year', DateTime.now().year)
     const month = request.input('month', DateTime.now().month)
 
-    const classes = await SchoolClass.query()
-      .where('schoolId', schoolId)
-      .preload('sections')
-      .orderBy('name', 'asc')
-
+    const classes = await ListClasses.handle({ schoolId })
     const classesData = classes.map((c) => ({
       id: c.id,
       name: c.name,
@@ -107,13 +93,7 @@ export default class AttendanceReportsController {
     const fromDateStr = request.input('fromDate', DateTime.now().startOf('month').toISODate())
     const toDateStr = request.input('toDate', DateTime.now().toISODate())
 
-    const student = await Student.query()
-      .where('id', studentId)
-      .where('schoolId', schoolId)
-      .preload('enrollments', (query) => {
-        query.orderBy('enrollmentDate', 'desc').preload('class').preload('section').limit(1)
-      })
-      .firstOrFail()
+    const student = await GetStudent.handle({ studentId, schoolId })
 
     const fromDate = DateTime.fromISO(fromDateStr)
     const toDate = DateTime.fromISO(toDateStr)
@@ -149,11 +129,7 @@ export default class AttendanceReportsController {
     const year = request.input('year', DateTime.now().year)
     const month = request.input('month', DateTime.now().month)
 
-    const classes = await SchoolClass.query()
-      .where('schoolId', schoolId)
-      .preload('sections')
-      .orderBy('name', 'asc')
-
+    const classes = await ListClasses.handle({ schoolId })
     const classesData = classes.map((c) => ({
       id: c.id,
       name: c.name,

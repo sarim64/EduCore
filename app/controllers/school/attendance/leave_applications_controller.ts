@@ -3,6 +3,7 @@ import GetLeaveApplication from '#actions/school/attendance/get_leave_applicatio
 import ApplyLeave from '#actions/school/attendance/apply_leave'
 import ProcessLeaveApplication from '#actions/school/attendance/process_leave_application'
 import ListLeaveTypes from '#actions/school/attendance/list_leave_types'
+import FindStaffByUserId from '#actions/school/staff/staff/find_staff_by_user_id'
 import LeaveApplicationDto from '#dtos/leave_application'
 import LeaveTypeDto from '#dtos/leave_type'
 import { applyLeaveValidator, processLeaveValidator } from '#validators/leave_application'
@@ -36,9 +37,7 @@ export default class LeaveApplicationsController {
     try {
       const data = await request.validateUsing(applyLeaveValidator)
 
-      // Find staff associated with this user
-      const { default: Staff } = await import('#models/staff_member')
-      const staff = await Staff.query().where('schoolId', schoolId).where('userId', user.id).first()
+      const staff = await FindStaffByUserId.handle(user.id, schoolId)
 
       if (!staff) {
         session.flash('errors', { general: 'You are not registered as staff in this school' })
@@ -138,9 +137,7 @@ export default class LeaveApplicationsController {
     const user = auth.user!
 
     try {
-      // Find staff associated with this user
-      const { default: Staff } = await import('#models/staff_member')
-      const staff = await Staff.query().where('schoolId', schoolId).where('userId', user.id).first()
+      const staff = await FindStaffByUserId.handle(user.id, schoolId)
 
       if (!staff) {
         session.flash('errors', { general: 'You are not registered as staff in this school' })

@@ -46,12 +46,8 @@ export type SchoolAdminDashboardStats = {
   } | null
 }
 
-export type CanSeeFlags = {
-  fees: boolean
-  subscription: boolean
-  attendance: boolean
-  staff: boolean
-}
+// Permission keys are strings like 'dashboard.cards.students'
+export type CanSee = Record<string, boolean>
 
 export type TeacherDashboardStats = {
   profile: {
