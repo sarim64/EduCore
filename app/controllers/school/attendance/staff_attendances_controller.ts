@@ -1,5 +1,5 @@
-import StaffAttendance from '#models/staff_attendance'
-import Staff from '#models/staff_member'
+import ListStaff from '#actions/school/staff/staff/list_staff'
+import GetStaffAttendanceHistory from '#actions/school/attendance/get_staff_attendance_history'
 import MarkStaffAttendance from '#actions/school/attendance/mark_staff_attendance'
 import MarkBulkStaffAttendance from '#actions/school/attendance/mark_bulk_staff_attendance'
 import StaffAttendanceDto from '#dtos/staff_attendance'
@@ -14,10 +14,7 @@ export default class StaffAttendancesController {
   async index({ session, inertia }: HttpContext) {
     const schoolId = session.get('schoolId')
 
-    const staffMembers = await Staff.query()
-      .where('schoolId', schoolId)
-      .where('status', 'active')
-      .orderBy('firstName', 'asc')
+    const staffMembers = await ListStaff.handle({ schoolId, status: 'active' })
 
     return inertia.render('school/attendance/staff/index', {
       staffMembers: StaffDto.fromArray(staffMembers),
@@ -27,10 +24,7 @@ export default class StaffAttendancesController {
   async markForm({ session, inertia }: HttpContext) {
     const schoolId = session.get('schoolId')
 
-    const staffMembers = await Staff.query()
-      .where('schoolId', schoolId)
-      .where('status', 'active')
-      .orderBy('firstName', 'asc')
+    const staffMembers = await ListStaff.handle({ schoolId, status: 'active' })
 
     return inertia.render('school/attendance/staff/mark', {
       staffMembers: StaffDto.fromArray(staffMembers),
@@ -59,10 +53,7 @@ export default class StaffAttendancesController {
   async bulkMarkForm({ session, inertia }: HttpContext) {
     const schoolId = session.get('schoolId')
 
-    const staffMembers = await Staff.query()
-      .where('schoolId', schoolId)
-      .where('status', 'active')
-      .orderBy('firstName', 'asc')
+    const staffMembers = await ListStaff.handle({ schoolId, status: 'active' })
 
     return inertia.render('school/attendance/staff/bulk-mark', {
       staffMembers: StaffDto.fromArray(staffMembers),
@@ -91,16 +82,10 @@ export default class StaffAttendancesController {
   async staffHistory({ params, session, inertia }: HttpContext) {
     const schoolId = session.get('schoolId')
 
-    const staff = await Staff.query()
-      .where('id', params.staffId)
-      .where('schoolId', schoolId)
-      .firstOrFail()
-
-    const attendances = await StaffAttendance.query()
-      .where('schoolId', schoolId)
-      .where('staffMemberId', params.staffId)
-      .orderBy('date', 'desc')
-      .limit(100)
+    const { staff, attendances } = await GetStaffAttendanceHistory.handle({
+      staffId: params.staffId,
+      schoolId,
+    })
 
     return inertia.render('school/attendance/staff/history', {
       staff: new StaffDto(staff),

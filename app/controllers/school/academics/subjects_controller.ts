@@ -1,4 +1,4 @@
-import SchoolClass from '#models/school_class'
+import ListClasses from '#actions/school/academics/class/list_classes'
 import ListSubjects from '#actions/school/academics/subject/list_subjects'
 import GetSubject from '#actions/school/academics/subject/get_subject'
 import StoreSubject from '#actions/school/academics/subject/store_subject'
@@ -39,15 +39,10 @@ export default class SubjectsController {
 
   async show({ params, session, inertia }: HttpContext) {
     const schoolId = session.get('schoolId')
-    const subject = await GetSubject.handle({
-      subjectId: params.id,
-      schoolId,
-    })
-
-    // Get all classes for assignment
-    const allClasses = await SchoolClass.query()
-      .where('schoolId', schoolId)
-      .orderBy('displayOrder', 'asc')
+    const [subject, allClasses] = await Promise.all([
+      GetSubject.handle({ subjectId: params.id, schoolId }),
+      ListClasses.handle({ schoolId }),
+    ])
 
     return inertia.render('school/academics/subjects/show', { subject, allClasses })
   }

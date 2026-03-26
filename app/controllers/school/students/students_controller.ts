@@ -3,6 +3,7 @@ import StoreStudent from '#actions/school/students/student/store_student'
 import UpdateStudent from '#actions/school/students/student/update_student'
 import DeleteStudent from '#actions/school/students/student/delete_student'
 import BulkImportStudents from '#actions/school/students/student/bulk_import_students'
+import ListStudentsPaginated from '#actions/school/students/student/list_students_paginated'
 import ListClasses from '#actions/school/academics/class/list_classes'
 import ListAcademicYears from '#actions/school/academics/year/list_academic_years'
 import ListGuardians from '#actions/school/students/guardian/list_guardians'
@@ -20,33 +21,7 @@ export default class StudentsController {
     const search = request.input('search', '')
     const status = request.input('status', '')
 
-    // Use action for base query, then apply pagination
-    const { default: Student } = await import('#models/student')
-    let query = Student.query()
-      .where('schoolId', schoolId)
-      .preload('enrollments', (q) => {
-        q.preload('class')
-        q.preload('section')
-        q.preload('academicYear')
-        q.orderBy('createdAt', 'desc')
-        q.limit(1)
-      })
-      .orderBy('firstName', 'asc')
-
-    if (search) {
-      query = query.where((q) => {
-        q.whereILike('firstName', `%${search}%`)
-          .orWhereILike('lastName', `%${search}%`)
-          .orWhereILike('studentId', `%${search}%`)
-          .orWhereILike('email', `%${search}%`)
-      })
-    }
-
-    if (status) {
-      query = query.where('status', status)
-    }
-
-    const students = await query.paginate(page, 20)
+    const students = await ListStudentsPaginated.handle({ schoolId, page, search, status })
 
     return inertia.render('school/students/index', {
       students: {
@@ -155,7 +130,6 @@ export default class StudentsController {
   async processImport({ request, response, session }: HttpContext) {
     const schoolId = session.get('schoolId')
 
-    // Get uploaded file
     const file = request.file('file', {
       size: '5mb',
       extnames: ['csv', 'xlsx', 'xls'],
@@ -172,18 +146,14 @@ export default class StudentsController {
     }
 
     try {
-      // Move file to temp location and read content
       await file.move('tmp')
       const fs = await import('node:fs/promises')
       const content = await fs.readFile(file.filePath!, 'utf-8')
 
-      // Parse CSV content
       const rows = this.#parseCSV(content)
 
-      // Perform bulk import
       const result = await BulkImportStudents.handle({ schoolId, rows })
 
-      // Flash results
       if (result.success > 0) {
         session.flash(
           'success',

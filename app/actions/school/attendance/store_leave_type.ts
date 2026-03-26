@@ -9,6 +9,17 @@ type Params = {
 
 export default class StoreLeaveType {
   static async handle({ schoolId, data }: Params) {
+    const existing = await LeaveType.query()
+      .where('schoolId', schoolId)
+      .where('code', data.code)
+      .first()
+
+    if (existing) {
+      const e = new Error('Leave type code already exists') as any
+      e.code = 'E_DUPLICATE_LEAVE_TYPE_CODE'
+      throw e
+    }
+
     return LeaveType.create({
       schoolId,
       name: data.name,

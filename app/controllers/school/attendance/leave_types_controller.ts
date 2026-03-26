@@ -25,19 +25,15 @@ export default class LeaveTypesController {
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(createLeaveTypeValidator)
 
-    // Check for duplicate code within school
-    const { default: LeaveType } = await import('#models/leave_type')
-    const existingLeaveType = await LeaveType.query()
-      .where('schoolId', schoolId)
-      .where('code', data.code)
-      .first()
-
-    if (existingLeaveType) {
-      session.flash('errors', { code: 'Leave type code already exists' })
-      return response.redirect().back()
+    try {
+      await StoreLeaveType.handle({ schoolId, data })
+    } catch (error) {
+      if (error?.code === 'E_DUPLICATE_LEAVE_TYPE_CODE') {
+        session.flash('errors', { code: error.message })
+        return response.redirect().back()
+      }
+      throw error
     }
-
-    await StoreLeaveType.handle({ schoolId, data })
 
     session.flash('success', 'Leave type created successfully')
     return response.redirect().toPath('/attendance/leave-types')
@@ -59,31 +55,19 @@ export default class LeaveTypesController {
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(updateLeaveTypeValidator)
 
-    const leaveType = await GetLeaveType.handle({
-      leaveTypeId: params.id,
-      schoolId,
-    })
-
-    // Check for duplicate code if code is being changed
-    if (data.code && data.code !== leaveType.code) {
-      const { default: LeaveType } = await import('#models/leave_type')
-      const existingLeaveType = await LeaveType.query()
-        .where('schoolId', schoolId)
-        .where('code', data.code)
-        .whereNot('id', params.id)
-        .first()
-
-      if (existingLeaveType) {
-        session.flash('errors', { code: 'Leave type code already exists' })
+    try {
+      await UpdateLeaveType.handle({
+        leaveTypeId: params.id,
+        schoolId,
+        data,
+      })
+    } catch (error) {
+      if (error?.code === 'E_DUPLICATE_LEAVE_TYPE_CODE') {
+        session.flash('errors', { code: error.message })
         return response.redirect().back()
       }
+      throw error
     }
-
-    await UpdateLeaveType.handle({
-      leaveTypeId: params.id,
-      schoolId,
-      data,
-    })
 
     session.flash('success', 'Leave type updated successfully')
     return response.redirect().toPath('/attendance/leave-types')

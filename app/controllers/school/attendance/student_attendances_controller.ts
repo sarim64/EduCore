@@ -1,9 +1,9 @@
-import StudentAttendance from '#models/student_attendance'
-import Student from '#models/student'
-import SchoolClass from '#models/school_class'
-import Section from '#models/section'
-import AcademicYear from '#models/academic_year'
-import Enrollment from '#models/enrollment'
+import ListClasses from '#actions/school/academics/class/list_classes'
+import ListAcademicYears from '#actions/school/academics/year/list_academic_years'
+import ListSections from '#actions/school/academics/section/list_sections'
+import ListStudents from '#actions/school/students/student/list_students'
+import ListEnrolledStudents from '#actions/school/attendance/list_enrolled_students'
+import GetStudentAttendanceHistory from '#actions/school/attendance/get_student_attendance_history'
 import MarkStudentAttendance from '#actions/school/attendance/mark_student_attendance'
 import MarkBulkStudentAttendance from '#actions/school/attendance/mark_bulk_student_attendance'
 import StudentAttendanceDto from '#dtos/student_attendance'
@@ -18,11 +18,10 @@ export default class StudentAttendancesController {
   async index({ session, inertia }: HttpContext) {
     const schoolId = session.get('schoolId')
 
-    const classes = await SchoolClass.query().where('schoolId', schoolId).orderBy('name', 'asc')
-
-    const academicYears = await AcademicYear.query()
-      .where('schoolId', schoolId)
-      .orderBy('startDate', 'desc')
+    const [classes, academicYears] = await Promise.all([
+      ListClasses.handle({ schoolId }),
+      ListAcademicYears.handle({ schoolId }),
+    ])
 
     return inertia.render('school/attendance/students/index', {
       classes,
@@ -33,16 +32,11 @@ export default class StudentAttendancesController {
   async markForm({ session, inertia }: HttpContext) {
     const schoolId = session.get('schoolId')
 
-    const students = await Student.query()
-      .where('schoolId', schoolId)
-      .where('status', 'active')
-      .orderBy('firstName', 'asc')
-
-    const classes = await SchoolClass.query().where('schoolId', schoolId).orderBy('name', 'asc')
-
-    const academicYears = await AcademicYear.query()
-      .where('schoolId', schoolId)
-      .orderBy('startDate', 'desc')
+    const [students, classes, academicYears] = await Promise.all([
+      ListStudents.handle({ schoolId, status: 'active' }),
+      ListClasses.handle({ schoolId }),
+      ListAcademicYears.handle({ schoolId }),
+    ])
 
     const currentYear = academicYears.find((y) => y.isCurrent) || academicYears[0]
 
@@ -76,16 +70,10 @@ export default class StudentAttendancesController {
   async studentHistory({ params, session, inertia }: HttpContext) {
     const schoolId = session.get('schoolId')
 
-    const student = await Student.query()
-      .where('id', params.studentId)
-      .where('schoolId', schoolId)
-      .firstOrFail()
-
-    const attendances = await StudentAttendance.query()
-      .where('schoolId', schoolId)
-      .where('studentId', params.studentId)
-      .orderBy('date', 'desc')
-      .limit(100)
+    const { student, attendances } = await GetStudentAttendanceHistory.handle({
+      studentId: params.studentId,
+      schoolId,
+    })
 
     return inertia.render('school/attendance/students/history', {
       student: new StudentDto(student),
@@ -98,41 +86,24 @@ export default class StudentAttendancesController {
     const classId = request.input('classId')
     const sectionId = request.input('sectionId')
 
-    const classes = await SchoolClass.query().where('schoolId', schoolId).orderBy('name', 'asc')
-
-    const academicYears = await AcademicYear.query()
-      .where('schoolId', schoolId)
-      .orderBy('startDate', 'desc')
+    const [classes, academicYears] = await Promise.all([
+      ListClasses.handle({ schoolId }),
+      ListAcademicYears.handle({ schoolId }),
+    ])
 
     const currentYear = academicYears.find((y) => y.isCurrent) || academicYears[0]
 
-    let students: Student[] = []
-    let sections: Section[] = []
-
-    if (classId) {
-      // Get sections for this class
-      sections = await Section.query()
-        .where('schoolId', schoolId)
-        .where('classId', classId)
-        .orderBy('name', 'asc')
-
-      // Get students enrolled in this class for the current academic year
-      const enrollmentQuery = Enrollment.query()
-        .where('schoolId', schoolId)
-        .where('classId', classId)
-        .where('status', 'active')
-
-      if (currentYear) {
-        enrollmentQuery.where('academicYearId', currentYear.id)
-      }
-
-      if (sectionId) {
-        enrollmentQuery.where('sectionId', sectionId)
-      }
-
-      const enrollments = await enrollmentQuery.preload('student')
-      students = enrollments.map((e) => e.student)
-    }
+    const [sections, students] = await Promise.all([
+      classId ? ListSections.handle({ schoolId, classId }) : Promise.resolve([]),
+      classId
+        ? ListEnrolledStudents.handle({
+            schoolId,
+            classId,
+            academicYearId: currentYear?.id,
+            sectionId: sectionId || undefined,
+          })
+        : Promise.resolve([]),
+    ])
 
     return inertia.render('school/attendance/students/bulk-mark', {
       classes,
