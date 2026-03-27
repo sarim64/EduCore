@@ -68,13 +68,14 @@ export default class FeeChallansController {
     })
   }
 
-  async store({ request, response, session, auth }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const userId = auth.user!.id
     const data = await request.validateUsing(generateChallanValidator)
 
     try {
-      await GenerateChallan.handle({ schoolId, userId, data })
+      await GenerateChallan.handle({ schoolId, userId, data, ctx })
       session.flash('success', 'Fee challan generated successfully')
     } catch (error) {
       session.flash('error', error.message)
@@ -98,13 +99,14 @@ export default class FeeChallansController {
     })
   }
 
-  async bulkStore({ request, response, session, auth }: HttpContext) {
+  async bulkStore(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const userId = auth.user!.id
     const data = await request.validateUsing(bulkGenerateChallanValidator)
 
     try {
-      const result = await BulkGenerateChallans.handle({ schoolId, userId, data })
+      const result = await BulkGenerateChallans.handle({ schoolId, userId, data, ctx })
       session.flash(
         'success',
         `Generated ${result.generated} challans (${result.skipped} skipped - already exist)`

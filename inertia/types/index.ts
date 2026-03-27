@@ -1,3 +1,4 @@
+export * from './school.js'
 export * from './shared_props'
 export * from './invites'
 export * from './admin'

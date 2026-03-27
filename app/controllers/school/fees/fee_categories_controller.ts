@@ -21,11 +21,12 @@ export default class FeeCategoriesController {
     return inertia.render('school/fees/categories/create')
   }
 
-  async store({ request, response, session }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(createFeeCategoryValidator)
 
-    await StoreFeeCategory.handle({ schoolId, data })
+    await StoreFeeCategory.handle({ schoolId, data, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Fee category created successfully')
     return response.redirect().toRoute('fees.categories.index')
@@ -40,21 +41,23 @@ export default class FeeCategoriesController {
     })
   }
 
-  async update({ params, request, response, session }: HttpContext) {
+  async update(ctx: HttpContext) {
+    const { params, request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(updateFeeCategoryValidator)
 
-    await UpdateFeeCategory.handle({ id: params.id, schoolId, data })
+    await UpdateFeeCategory.handle({ id: params.id, schoolId, data, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Fee category updated successfully')
     return response.redirect().toRoute('fees.categories.index')
   }
 
-  async destroy({ params, response, session }: HttpContext) {
+  async destroy(ctx: HttpContext) {
+    const { params, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
 
     try {
-      await DeleteFeeCategory.handle({ id: params.id, schoolId })
+      await DeleteFeeCategory.handle({ id: params.id, schoolId, ctx, userId: auth.user!.id })
       session.flash('success', 'Fee category deleted successfully')
     } catch (error) {
       session.flash('error', error.message)

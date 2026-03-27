@@ -46,14 +46,15 @@ export default class StudentsController {
     })
   }
 
-  async store({ request, response, session }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const after = request.input('after')
     const data = await request.validateUsing(createStudentValidator)
     let student
 
     try {
-      student = await StoreStudent.handle({ schoolId, data })
+      student = await StoreStudent.handle({ schoolId, data, ctx, userId: auth.user!.id })
     } catch (error) {
       if (error?.code === 'E_SUBSCRIPTION_STUDENT_LIMIT_REACHED') {
         session.flash('error', error.message)
@@ -107,17 +108,20 @@ export default class StudentsController {
     return inertia.render('school/students/edit', { student: new StudentDto(student) })
   }
 
-  async update({ params, request, response, session }: HttpContext) {
+  async update(ctx: HttpContext) {
+    const { params, request, response, session, auth } = ctx
+    const schoolId = session.get('schoolId')
     const data = await request.validateUsing(updateStudentValidator)
 
-    await UpdateStudent.handle({ id: params.id, data })
+    await UpdateStudent.handle({ id: params.id, schoolId, data, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Student updated successfully')
     return response.redirect().toRoute('students.index')
   }
 
-  async destroy({ params, response, session }: HttpContext) {
-    await DeleteStudent.handle({ id: params.id })
+  async destroy(ctx: HttpContext) {
+    const { params, response, session, auth } = ctx
+    await DeleteStudent.handle({ id: params.id, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Student deleted successfully')
     return response.redirect().toRoute('students.index')

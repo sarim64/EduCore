@@ -90,7 +90,7 @@ export type AuditLog = {
   id: string
   action: string
   entityType: string
-  entityId: string
+  entityId: string | null
   description: string | null
   ipAddress: string | null
   userAgent: string | null

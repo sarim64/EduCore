@@ -5,12 +5,13 @@ import { createEnrollmentValidator, updateEnrollmentValidator } from '#validator
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class EnrollmentsController {
-  async store({ request, response, session }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(createEnrollmentValidator)
 
     try {
-      await StoreEnrollment.handle({ schoolId, data })
+      await StoreEnrollment.handle({ schoolId, data, ctx, userId: auth.user!.id })
 
       session.flash('success', 'Student enrolled successfully')
       return response.redirect().back()
@@ -24,17 +25,19 @@ export default class EnrollmentsController {
     }
   }
 
-  async update({ params, request, response, session }: HttpContext) {
+  async update(ctx: HttpContext) {
+    const { params, request, response, session, auth } = ctx
     const data = await request.validateUsing(updateEnrollmentValidator)
 
-    await UpdateEnrollment.handle({ id: params.id, data })
+    await UpdateEnrollment.handle({ id: params.id, data, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Enrollment updated successfully')
     return response.redirect().back()
   }
 
-  async destroy({ params, response, session }: HttpContext) {
-    await DeleteEnrollment.handle({ id: params.id })
+  async destroy(ctx: HttpContext) {
+    const { params, response, session, auth } = ctx
+    await DeleteEnrollment.handle({ id: params.id, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Enrollment removed')
     return response.redirect().back()
