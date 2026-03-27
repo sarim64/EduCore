@@ -27,6 +27,8 @@ export default class SuspendSchool {
           entityType: 'school',
           entityId: school.id,
           targetSchoolId: school.id,
+          oldValues: { isSuspended: false },
+          newValues: { isSuspended: true },
           ipAddress: this.ctx.request.ip(),
           userAgent: this.ctx.request.header('user-agent'),
           description: `Suspended school: ${school.name}`,

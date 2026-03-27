@@ -27,6 +27,8 @@ export default class ActivateSchool {
           entityType: 'school',
           entityId: school.id,
           targetSchoolId: school.id,
+          oldValues: { isSuspended: true },
+          newValues: { isSuspended: false },
           ipAddress: this.ctx.request.ip(),
           userAgent: this.ctx.request.header('user-agent'),
           description: `Activated school: ${school.name}`,

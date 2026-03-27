@@ -97,19 +97,12 @@ export type AuditLog = {
   oldValues: Record<string, unknown> | null
   newValues: Record<string, unknown> | null
   createdAt: string
-  superAdmin: AuditLogSuperAdmin | null
-  targetSchool: { id: string; name: string } | null
-  targetUser: User | null
-}
-
-export type AuditLogSuperAdmin = {
-  id: string
-  user: {
+  superAdmin: {
     id: string
-    firstName: string
-    lastName: string | null
-    email: string
+    user: { id: string; firstName: string; lastName: string | null; email: string } | null
   } | null
+  targetSchool: { id: string; name: string } | null
+  targetUser: { id: string; firstName: string; lastName: string | null; email: string } | null
 }
 
 export type PaginationMeta = {

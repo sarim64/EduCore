@@ -21,6 +21,9 @@ export default class extends BaseSchema {
       table.text('user_agent')
       table.text('description')
       table.timestamp('created_at').notNullable()
+
+      table.index(['created_at'], 'admin_audit_logs_created_at_index')
+      table.index(['super_admin_id'], 'admin_audit_logs_super_admin_id_index')
     })
   }
 
