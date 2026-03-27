@@ -56,7 +56,7 @@ export default class ExtendSubscription {
       await AdminAuditLog.create(
         {
           superAdminId: superAdmin.id,
-          action: 'update',
+          action: 'extend_subscription',
           entityType: 'school_subscription',
           entityId: newSub.id,
           targetSchoolId: school.id,

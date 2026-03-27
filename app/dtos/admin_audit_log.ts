@@ -1,8 +1,5 @@
 import { BaseModelDto } from '@adocasts.com/dto/base'
 import AdminAuditLog from '#models/admin_audit_log'
-import SuperAdminDto from '#dtos/super_admin'
-import SchoolDto from '#dtos/school'
-import UserDto from '#dtos/user'
 
 export default class AdminAuditLogDto extends BaseModelDto {
   declare id: string
@@ -18,9 +15,9 @@ export default class AdminAuditLogDto extends BaseModelDto {
   declare userAgent: string | null
   declare description: string | null
   declare createdAt: string
-  declare superAdmin: SuperAdminDto | null
-  declare targetSchool: SchoolDto | null
-  declare targetUser: UserDto | null
+  declare superAdmin: { id: string; user: { id: string; firstName: string; lastName: string | null; email: string } | null } | null
+  declare targetSchool: { id: string; name: string } | null
+  declare targetUser: { id: string; firstName: string; lastName: string | null; email: string } | null
 
   constructor(log?: AdminAuditLog) {
     super()
@@ -39,8 +36,29 @@ export default class AdminAuditLogDto extends BaseModelDto {
     this.userAgent = log.userAgent
     this.description = log.description
     this.createdAt = log.createdAt.toISO()!
-    this.superAdmin = log.superAdmin ? new SuperAdminDto(log.superAdmin) : null
-    this.targetSchool = log.targetSchool ? new SchoolDto(log.targetSchool) : null
-    this.targetUser = log.targetUser ? new UserDto(log.targetUser) : null
+    this.superAdmin = log.superAdmin
+      ? {
+          id: log.superAdmin.id,
+          user: log.superAdmin.user
+            ? {
+                id: log.superAdmin.user.id,
+                firstName: log.superAdmin.user.firstName,
+                lastName: log.superAdmin.user.lastName,
+                email: log.superAdmin.user.email,
+              }
+            : null,
+        }
+      : null
+    this.targetSchool = log.targetSchool
+      ? { id: log.targetSchool.id, name: log.targetSchool.name }
+      : null
+    this.targetUser = log.targetUser
+      ? {
+          id: log.targetUser.id,
+          firstName: log.targetUser.firstName,
+          lastName: log.targetUser.lastName,
+          email: log.targetUser.email,
+        }
+      : null
   }
 }

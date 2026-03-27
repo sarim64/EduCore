@@ -28,34 +28,28 @@ export default function AdminSchoolAdminsCreatePage({ school }: { school: School
         <div>
           <Link
             href={`/admin/schools/${school.id}/admins`}
-            className="text-[color:var(--primary)] hover:text-[color:var(--primary-foreground-link)] text-sm"
+            className="text-primary hover:text-(--primary-foreground-link) text-sm"
           >
             ← Back to Admins
           </Link>
-          <h1 className="text-4xl font-bold text-[color:var(--foreground)] mt-2">
-            Add School Admin
-          </h1>
-          <p className="text-[color:var(--muted-foreground)] mt-1">
-            Add an administrator to {school.name}
-          </p>
+          <h1 className="text-4xl font-bold text-foreground mt-2">Add School Admin</h1>
+          <p className="text-foreground mt-1">Add an administrator to {school.name}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Card className="bg-[color:var(--card)] border-[color:var(--border)] shadow-md">
+          <Card className="bg-card border-border shadow-md">
             <CardHeader>
-              <CardTitle className="text-[color:var(--card-foreground)]">
-                Admin Information
-              </CardTitle>
+              <CardTitle className="text-card-foreground">Admin Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-[color:var(--muted-foreground)] text-sm">
+              <p className="text-muted-foreground text-sm">
                 If the email already exists in the system, the existing user will be added as an
                 admin. Otherwise, a new user will be created.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-[color:var(--foreground)]">
+                  <Label htmlFor="firstName" className="text-foreground">
                     First Name *
                   </Label>
                   <Input
@@ -65,12 +59,12 @@ export default function AdminSchoolAdminsCreatePage({ school }: { school: School
                     placeholder="First name"
                   />
                   {errors.firstName && (
-                    <p className="text-[color:var(--destructive)] text-sm">{errors.firstName}</p>
+                    <p className="text-destructive text-sm">{errors.firstName}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-[color:var(--foreground)]">
+                  <Label htmlFor="lastName" className="text-foreground">
                     Last Name
                   </Label>
                   <Input
@@ -79,14 +73,12 @@ export default function AdminSchoolAdminsCreatePage({ school }: { school: School
                     onChange={(e) => setData('lastName', e.target.value)}
                     placeholder="Last name"
                   />
-                  {errors.lastName && (
-                    <p className="text-[color:var(--destructive)] text-sm">{errors.lastName}</p>
-                  )}
+                  {errors.lastName && <p className="text-destructive text-sm">{errors.lastName}</p>}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[color:var(--foreground)]">
+                <Label htmlFor="email" className="text-foreground">
                   Email *
                 </Label>
                 <Input
@@ -96,13 +88,11 @@ export default function AdminSchoolAdminsCreatePage({ school }: { school: School
                   onChange={(e) => setData('email', e.target.value)}
                   placeholder="admin@school.com"
                 />
-                {errors.email && (
-                  <p className="text-[color:var(--destructive)] text-sm">{errors.email}</p>
-                )}
+                {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-[color:var(--foreground)]">
+                <Label htmlFor="password" className="text-foreground">
                   Password (for new users)
                 </Label>
                 <Input
@@ -112,12 +102,10 @@ export default function AdminSchoolAdminsCreatePage({ school }: { school: School
                   onChange={(e) => setData('password', e.target.value)}
                   placeholder="Leave blank for default password"
                 />
-                <p className="text-[color:var(--muted-foreground)] text-xs">
+                <p className="text-muted-foreground text-xs">
                   If left blank, a default password will be set for new users.
                 </p>
-                {errors.password && (
-                  <p className="text-[color:var(--destructive)] text-sm">{errors.password}</p>
-                )}
+                {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
               </div>
             </CardContent>
           </Card>
@@ -138,4 +126,6 @@ export default function AdminSchoolAdminsCreatePage({ school }: { school: School
   )
 }
 
-AdminSchoolAdminsCreatePage.layout = (page: ReactElement) => <SuperAdminLayout>{page}</SuperAdminLayout>
+AdminSchoolAdminsCreatePage.layout = (page: ReactElement) => (
+  <SuperAdminLayout>{page}</SuperAdminLayout>
+)

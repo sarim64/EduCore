@@ -71,11 +71,13 @@ export default class AddSchoolAdmin {
       }
 
       // Attach school admin role if not already assigned
-      await school.load('users', (query) => {
-        query.wherePivot('user_id', user!.id)
-      })
+      const existingRow = await trx
+        .from('school_users')
+        .where('school_id', school.id)
+        .where('user_id', user.id)
+        .first()
 
-      if (school.users.length === 0) {
+      if (!existingRow) {
         await school.related('users').attach(
           { [user.id]: { role_id: Roles.SCHOOL_ADMIN } },
           trx
