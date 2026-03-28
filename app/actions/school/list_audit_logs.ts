@@ -13,20 +13,20 @@ type Params = {
 export default class ListSchoolAuditLogs {
   static async handle({ schoolId, page = 1, limit = 50, search, action, from, to }: Params) {
     const query = AuditLog.query()
-      .where('school_id', schoolId)
+      .where('schoolId', schoolId)
       .preload('user')
-      .orderBy('created_at', 'desc')
+      .orderBy('createdAt', 'desc')
 
     if (action) {
       query.where('action', action)
     }
 
     if (from) {
-      query.where('created_at', '>=', from)
+      query.where('createdAt', '>=', from)
     }
 
     if (to) {
-      query.where('created_at', '<=', `${to} 23:59:59`)
+      query.where('createdAt', '<=', `${to} 23:59:59`)
     }
 
     if (search) {

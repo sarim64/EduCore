@@ -19,7 +19,6 @@ export default class StoreStaff {
   static async handle({ schoolId, data, ctx, userId }: Params) {
     await SubscriptionLimitService.assertCanAddStaff(schoolId, 1)
 
-    // Generate unique staff ID
     const staffMemberId = await this.#generateStaffId(schoolId)
     let linkedUserId: string | undefined
 
@@ -83,11 +82,8 @@ export default class StoreStaff {
   }
 
   static async #generateStaffId(schoolId: string): Promise<string> {
-    // Get the count of staff in this school
     const count = await Staff.query().where('schoolId', schoolId).count('* as total')
     const total = Number(count[0].$extras.total) + 1
-
-    // Format: STF-XXXX (zero-padded)
     return `STF-${total.toString().padStart(4, '0')}`
   }
 }

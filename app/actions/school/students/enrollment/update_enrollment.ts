@@ -25,7 +25,7 @@ export default class UpdateEnrollment {
       oldValues,
       { classId: enrollment.classId, sectionId: enrollment.sectionId, rollNumber: enrollment.rollNumber, status: enrollment.status },
       ctx,
-      schoolId ?? undefined,
+      schoolId,
       userId
     )
 

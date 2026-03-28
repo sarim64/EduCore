@@ -115,7 +115,7 @@ export default class StaffController {
     const { params, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
 
-    await DeleteStaff.handle(params.id, schoolId, ctx, auth.user!.id)
+    await DeleteStaff.handle({ staffMemberId: params.id, schoolId, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Staff member deleted successfully')
     return response.redirect().toRoute('staff.members.index')

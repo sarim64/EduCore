@@ -16,6 +16,6 @@ export default class DeleteStudent {
 
     await student.delete()
 
-    await AuditService.logDelete('Student', id, oldValues, ctx, schoolId ?? undefined, userId)
+    await AuditService.logDelete('Student', id, oldValues, ctx, schoolId, userId)
   }
 }

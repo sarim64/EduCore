@@ -6,6 +6,7 @@ enum Roles {
   VICE_PRINCIPAL = 5,
   TEACHER = 6,
   SUPPORT_STAFF = 7,
+  STUDENT = 8,
 }
 
 export default Roles

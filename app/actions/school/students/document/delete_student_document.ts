@@ -28,6 +28,6 @@ export default class DeleteStudentDocument {
     // Delete document record
     await document.delete()
 
-    await AuditService.logDelete('StudentDocument', id, oldValues, ctx, schoolId ?? undefined, userId)
+    await AuditService.logDelete('StudentDocument', id, oldValues, ctx, schoolId, userId)
   }
 }

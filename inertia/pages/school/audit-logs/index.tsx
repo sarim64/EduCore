@@ -1,7 +1,6 @@
 import { type ReactElement, useState } from 'react'
 import { Head, router } from '@inertiajs/react'
 import DashboardLayout from '~/layouts/DashboardLayout'
-import { X } from 'lucide-react'
 import type { SchoolAuditLog, PaginationMeta } from '~/types'
 import {
   Table,
@@ -11,6 +10,14 @@ import {
   TableRow,
   TableCell,
 } from '~/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog'
+import { Button } from '~/components/ui/button'
+import { formatTimestamp } from '~/lib/audit-log'
 
 function actionBadgeClass(action: string) {
   if (action === 'create') return 'bg-emerald-100 text-emerald-700'
@@ -20,124 +27,6 @@ function actionBadgeClass(action: string) {
   if (action === 'logout') return 'bg-gray-100 text-gray-600'
   if (action === 'payment') return 'bg-violet-100 text-violet-700'
   return 'bg-gray-100 text-gray-600'
-}
-
-function formatTimestamp(dateStr: string) {
-  return new Date(dateStr)
-    .toLocaleString('en-CA', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    })
-    .replace(',', '')
-}
-
-function DetailModal({ log, onClose }: { log: SchoolAuditLog; onClose: () => void }) {
-  const oldKeys = log.oldValues ? Object.keys(log.oldValues) : []
-  const newKeys = log.newValues ? Object.keys(log.newValues) : []
-  const allKeys = [...new Set([...oldKeys, ...newKeys])]
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-semibold text-gray-900">Log Entry Detail</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-500">Timestamp</span>
-            <span className="font-mono text-gray-900">{formatTimestamp(log.createdAt)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">User</span>
-            <div className="text-right">
-              <span className="text-gray-900">
-                {log.user
-                  ? `${log.user.firstName} ${log.user.lastName ?? ''}`.trim()
-                  : 'System'}
-              </span>
-              {log.user && (
-                <div className="text-gray-500 text-xs">{log.user.email}</div>
-              )}
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500">Action</span>
-            <span
-              className={`px-2 py-0.5 rounded text-xs font-medium ${actionBadgeClass(log.action)}`}
-            >
-              {log.action}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Resource</span>
-            <span className="text-gray-900 text-right">
-              {log.entityType}
-              {log.entityId && <span className="text-gray-500"> — {log.entityId}</span>}
-            </span>
-          </div>
-          {log.description && (
-            <div className="flex justify-between">
-              <span className="text-gray-500">Description</span>
-              <span className="text-gray-700 text-right max-w-xs">{log.description}</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span className="text-gray-500">IP Address</span>
-            <span className="font-mono text-gray-900">{log.ipAddress ?? '—'}</span>
-          </div>
-          {log.userAgent && (
-            <div className="flex justify-between">
-              <span className="text-gray-500">User Agent</span>
-              <span className="text-gray-600 text-xs text-right max-w-xs">{log.userAgent}</span>
-            </div>
-          )}
-
-          {allKeys.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <p className="text-gray-500 mb-2">Changes</p>
-              <div className="bg-gray-50 rounded-lg p-3 font-mono text-xs text-gray-700 space-y-1">
-                {allKeys.map((key) => {
-                  const oldVal = log.oldValues?.[key]
-                  const newVal = log.newValues?.[key]
-                  if (oldVal === newVal) return null
-                  return (
-                    <div key={key}>
-                      {oldVal !== undefined && (
-                        <div className="text-red-500">
-                          - {key}: "{String(oldVal)}"
-                        </div>
-                      )}
-                      {newVal !== undefined && (
-                        <div className="text-green-600">
-                          + {key}: "{String(newVal)}"
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 type Props = {
@@ -187,7 +76,19 @@ export default function SchoolAuditLogsIndexPage({ logs, filters }: Props) {
     router.get('/audit-logs', {}, { preserveState: false })
   }
 
+  function navigateToPage(page: number) {
+    router.get(buildPageUrl(page, filters), {}, { preserveState: true })
+  }
+
   const hasActiveFilters = filters.search || filters.action || filters.from || filters.to
+
+  const { currentPage, lastPage, perPage, total } = logs.meta
+  const pageWindowStart = Math.max(1, currentPage - 2)
+  const pageWindowEnd = Math.min(lastPage, pageWindowStart + 4)
+
+  const selectedLogOldKeys = selectedLog?.oldValues ? Object.keys(selectedLog.oldValues) : []
+  const selectedLogNewKeys = selectedLog?.newValues ? Object.keys(selectedLog.newValues) : []
+  const selectedLogAllKeys = [...new Set([...selectedLogOldKeys, ...selectedLogNewKeys])]
 
   return (
     <>
@@ -313,43 +214,42 @@ export default function SchoolAuditLogsIndexPage({ logs, filters }: Props) {
             {/* Pagination */}
             <div className="border-t border-gray-100 px-5 py-3 flex items-center justify-between">
               <span className="text-sm text-gray-500">
-                Showing {(logs.meta.currentPage - 1) * logs.meta.perPage + 1}–
-                {Math.min(logs.meta.currentPage * logs.meta.perPage, logs.meta.total)} of{' '}
-                {logs.meta.total} log entries
+                Showing {(currentPage - 1) * perPage + 1}–
+                {Math.min(currentPage * perPage, total)} of {total} log entries
               </span>
-              {logs.meta.lastPage > 1 && (
+              {lastPage > 1 && (
                 <div className="flex gap-1">
-                  {logs.meta.currentPage > 1 && (
-                    <a
-                      href={buildPageUrl(logs.meta.currentPage - 1, filters)}
+                  {currentPage > 1 && (
+                    <button
+                      onClick={() => navigateToPage(currentPage - 1)}
                       className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
                     >
                       Previous
-                    </a>
+                    </button>
                   )}
-                  {Array.from({ length: Math.min(logs.meta.lastPage, 5) }, (_, i) => {
-                    const page = i + 1
+                  {Array.from({ length: pageWindowEnd - pageWindowStart + 1 }, (_, i) => {
+                    const page = pageWindowStart + i
                     return (
-                      <a
+                      <button
                         key={page}
-                        href={buildPageUrl(page, filters)}
+                        onClick={() => navigateToPage(page)}
                         className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                          page === logs.meta.currentPage
+                          page === currentPage
                             ? 'bg-violet-600 text-white'
                             : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
                         }`}
                       >
                         {page}
-                      </a>
+                      </button>
                     )
                   })}
-                  {logs.meta.currentPage < logs.meta.lastPage && (
-                    <a
-                      href={buildPageUrl(logs.meta.currentPage + 1, filters)}
+                  {currentPage < lastPage && (
+                    <button
+                      onClick={() => navigateToPage(currentPage + 1)}
                       className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
                     >
                       Next
-                    </a>
+                    </button>
                   )}
                 </div>
               )}
@@ -358,7 +258,97 @@ export default function SchoolAuditLogsIndexPage({ logs, filters }: Props) {
         )}
       </div>
 
-      {selectedLog && <DetailModal log={selectedLog} onClose={() => setSelectedLog(null)} />}
+      {/* Detail Dialog */}
+      <Dialog open={selectedLog !== null} onOpenChange={(open) => !open && setSelectedLog(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Log Entry Detail</DialogTitle>
+          </DialogHeader>
+          {selectedLog && (
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Timestamp</span>
+                <span className="font-mono text-gray-900">{formatTimestamp(selectedLog.createdAt)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">User</span>
+                <div className="text-right">
+                  <span className="text-gray-900">
+                    {selectedLog.user
+                      ? `${selectedLog.user.firstName} ${selectedLog.user.lastName ?? ''}`.trim()
+                      : 'System'}
+                  </span>
+                  {selectedLog.user && (
+                    <div className="text-gray-500 text-xs">{selectedLog.user.email}</div>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Action</span>
+                <span
+                  className={`px-2 py-0.5 rounded text-xs font-medium ${actionBadgeClass(selectedLog.action)}`}
+                >
+                  {selectedLog.action}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Resource</span>
+                <span className="text-gray-900 text-right">
+                  {selectedLog.entityType}
+                  {selectedLog.entityId && <span className="text-gray-500"> — {selectedLog.entityId}</span>}
+                </span>
+              </div>
+              {selectedLog.description && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Description</span>
+                  <span className="text-gray-700 text-right max-w-xs">{selectedLog.description}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-500">IP Address</span>
+                <span className="font-mono text-gray-900">{selectedLog.ipAddress ?? '—'}</span>
+              </div>
+              {selectedLog.userAgent && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">User Agent</span>
+                  <span className="text-gray-600 text-xs text-right max-w-xs">{selectedLog.userAgent}</span>
+                </div>
+              )}
+              {selectedLogAllKeys.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-gray-500 mb-2">Changes</p>
+                  <div className="bg-gray-50 rounded-lg p-3 font-mono text-xs text-gray-700 space-y-1">
+                    {selectedLogAllKeys.map((key) => {
+                      const oldVal = selectedLog.oldValues?.[key]
+                      const newVal = selectedLog.newValues?.[key]
+                      if (oldVal === newVal) return null
+                      return (
+                        <div key={key}>
+                          {oldVal !== undefined && (
+                            <div className="text-red-500">
+                              - {key}: "{String(oldVal)}"
+                            </div>
+                          )}
+                          {newVal !== undefined && (
+                            <div className="text-green-600">
+                              + {key}: "{String(newVal)}"
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-end pt-2">
+                <Button variant="outline" onClick={() => setSelectedLog(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

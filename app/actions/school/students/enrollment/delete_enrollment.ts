@@ -16,6 +16,6 @@ export default class DeleteEnrollment {
 
     await enrollment.delete()
 
-    await AuditService.logDelete('Enrollment', id, oldValues, ctx, schoolId ?? undefined, userId)
+    await AuditService.logDelete('Enrollment', id, oldValues, ctx, schoolId, userId)
   }
 }
