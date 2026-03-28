@@ -13,9 +13,6 @@ type AuditParams = {
 }
 
 export default class AuditService {
-  /**
-   * Log an audit event
-   */
   static async log(params: AuditParams, ctx?: HttpContext) {
     const ipAddress = ctx?.request.ip()
     const userAgent = ctx?.request.header('user-agent')
@@ -34,9 +31,6 @@ export default class AuditService {
     })
   }
 
-  /**
-   * Log a create action
-   */
   static async logCreate(
     entityType: string,
     entityId: string,
@@ -59,9 +53,6 @@ export default class AuditService {
     )
   }
 
-  /**
-   * Log an update action
-   */
   static async logUpdate(
     entityType: string,
     entityId: string,
@@ -86,9 +77,6 @@ export default class AuditService {
     )
   }
 
-  /**
-   * Log a delete action
-   */
   static async logDelete(
     entityType: string,
     entityId: string,
@@ -111,9 +99,6 @@ export default class AuditService {
     )
   }
 
-  /**
-   * Log a login action
-   */
   static async logLogin(userId: string, ctx?: HttpContext, schoolId?: string) {
     return this.log(
       {
@@ -128,9 +113,6 @@ export default class AuditService {
     )
   }
 
-  /**
-   * Log a logout action
-   */
   static async logLogout(userId: string, ctx?: HttpContext, schoolId?: string) {
     return this.log(
       {

@@ -4,6 +4,7 @@ import SuperAdminLayout from '~/layouts/SuperAdminLayout'
 import { X } from 'lucide-react'
 import type { AuditLog, PaginationMeta } from '~/types'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '~/components/ui/table'
+import { formatTimestamp } from '~/lib/audit-log'
 
 function actionBadgeClass(action: string) {
   if (action === 'create' || action === 'create_school' || action === 'add_admin') {
@@ -30,17 +31,6 @@ function actionBadgeClass(action: string) {
   return 'bg-gray-100 text-gray-600'
 }
 
-function formatTimestamp(dateStr: string) {
-  return new Date(dateStr).toLocaleString('en-CA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).replace(',', '')
-}
 
 function DetailModal({ log, onClose }: { log: AuditLog; onClose: () => void }) {
   const oldKeys = log.oldValues ? Object.keys(log.oldValues) : []

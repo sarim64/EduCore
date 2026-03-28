@@ -5,15 +5,19 @@ import { Infer } from '@vinejs/vine/types'
 import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
 import SubscriptionLimitService from '#services/subscription_limit_service'
+import AuditService from '#services/audit_service'
+import type { HttpContext } from '@adonisjs/core/http'
 
 type Params = {
   schoolId: string
   data: Infer<typeof createStudentValidator>
+  ctx: HttpContext
+  userId: string
 }
 
 export default class StoreStudent {
-  static async handle({ schoolId, data }: Params) {
-    return db.transaction(async (trx) => {
+  static async handle({ schoolId, data, ctx, userId }: Params) {
+    const student = await db.transaction(async (trx) => {
       await SubscriptionLimitService.assertCanAddStudents(schoolId, 1, trx)
 
       // Get school for settings
@@ -22,7 +26,7 @@ export default class StoreStudent {
       // Generate student ID
       const studentId = await this.#generateStudentId(school, trx)
 
-      const student = await Student.create(
+      return Student.create(
         {
           schoolId,
           studentId,
@@ -50,9 +54,18 @@ export default class StoreStudent {
         },
         { client: trx }
       )
-
-      return student
     })
+
+    await AuditService.logCreate(
+      'Student',
+      student.id,
+      { firstName: student.firstName, lastName: student.lastName, studentId: student.studentId, status: student.status },
+      ctx,
+      schoolId,
+      userId
+    )
+
+    return student
   }
 
   static async #generateStudentId(

@@ -28,11 +28,12 @@ export default class DesignationsController {
     })
   }
 
-  async store({ request, response, session }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(createDesignationValidator)
 
-    await StoreDesignation.handle({ schoolId, data })
+    await StoreDesignation.handle({ schoolId, data, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Designation created successfully')
     return response.redirect().toRoute('staff.designations.index')
@@ -52,7 +53,8 @@ export default class DesignationsController {
     })
   }
 
-  async update({ params, request, response, session }: HttpContext) {
+  async update(ctx: HttpContext) {
+    const { params, request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(updateDesignationValidator)
 
@@ -60,18 +62,23 @@ export default class DesignationsController {
       designationId: params.id,
       schoolId,
       data,
+      ctx,
+      userId: auth.user!.id,
     })
 
     session.flash('success', 'Designation updated successfully')
     return response.redirect().toRoute('staff.designations.index')
   }
 
-  async destroy({ params, response, session }: HttpContext) {
+  async destroy(ctx: HttpContext) {
+    const { params, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
 
     await DeleteDesignation.handle({
       designationId: params.id,
       schoolId,
+      ctx,
+      userId: auth.user!.id,
     })
 
     session.flash('success', 'Designation deleted successfully')

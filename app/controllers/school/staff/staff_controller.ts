@@ -36,14 +36,15 @@ export default class StaffController {
     })
   }
 
-  async store({ request, response, session }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(createStaffValidator, {
       meta: { schoolId },
     })
 
     try {
-      await StoreStaff.handle({ schoolId, data })
+      await StoreStaff.handle({ schoolId, data, ctx, userId: auth.user!.id })
     } catch (error) {
       if (error?.code === 'E_SUBSCRIPTION_STAFF_LIMIT_REACHED') {
         session.flash('error', error.message)
@@ -91,7 +92,8 @@ export default class StaffController {
     })
   }
 
-  async update({ params, request, response, session }: HttpContext) {
+  async update(ctx: HttpContext) {
+    const { params, request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(updateStaffValidator, {
       meta: { schoolId, staffId: params.id },
@@ -101,16 +103,19 @@ export default class StaffController {
       staffMemberId: params.id,
       schoolId,
       data,
+      ctx,
+      userId: auth.user!.id,
     })
 
     session.flash('success', 'Staff member updated successfully')
     return response.redirect().toRoute('staff.members.index')
   }
 
-  async destroy({ params, response, session }: HttpContext) {
+  async destroy(ctx: HttpContext) {
+    const { params, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
 
-    await DeleteStaff.handle(params.id, schoolId)
+    await DeleteStaff.handle({ staffMemberId: params.id, schoolId, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Staff member deleted successfully')
     return response.redirect().toRoute('staff.members.index')

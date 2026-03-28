@@ -9,16 +9,19 @@ import { generateChallanValidator } from '#validators/fee_challan'
 import { Infer } from '@vinejs/vine/types'
 import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
+import AuditService from '#services/audit_service'
+import type { HttpContext } from '@adonisjs/core/http'
 
 type Params = {
   schoolId: string
   userId: string
   data: Infer<typeof generateChallanValidator>
+  ctx: HttpContext
 }
 
 export default class GenerateChallan {
-  static async handle({ schoolId, userId, data }: Params) {
-    return db.transaction(async (trx) => {
+  static async handle({ schoolId, userId, data, ctx }: Params) {
+    const challan = await db.transaction(async (trx) => {
       // Get student's enrollment for the academic year
       const enrollment = await Enrollment.query({ client: trx })
         .where('studentId', data.studentId)
@@ -117,7 +120,7 @@ export default class GenerateChallan {
       const netAmount = totalAmount - totalDiscount
 
       // Create challan
-      const challan = await FeeChallan.create(
+      const newChallan = await FeeChallan.create(
         {
           schoolId,
           studentId: data.studentId,
@@ -145,7 +148,7 @@ export default class GenerateChallan {
       for (const item of items) {
         await FeeChallanItem.create(
           {
-            feeChallanId: challan.id,
+            feeChallanId: newChallan.id,
             ...item,
           },
           { client: trx }
@@ -153,11 +156,22 @@ export default class GenerateChallan {
       }
 
       // Reload with relationships
-      await challan.load('student')
-      await challan.load('items', (q) => q.preload('feeCategory'))
+      await newChallan.load('student')
+      await newChallan.load('items', (q) => q.preload('feeCategory'))
 
-      return challan
+      return newChallan
     })
+
+    await AuditService.logCreate(
+      'FeeChallan',
+      challan.id,
+      { challanNumber: challan.challanNumber, studentId: challan.studentId, period: challan.period, netAmount: challan.netAmount },
+      ctx,
+      schoolId,
+      userId
+    )
+
+    return challan
   }
 
   static async #generateChallanNumber(

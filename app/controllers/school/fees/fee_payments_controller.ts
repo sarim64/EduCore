@@ -44,13 +44,14 @@ export default class FeePaymentsController {
     })
   }
 
-  async store({ request, response, session, auth }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const userId = auth.user!.id
     const data = await request.validateUsing(recordPaymentValidator)
 
     try {
-      await RecordPayment.handle({ schoolId, userId, data })
+      await RecordPayment.handle({ schoolId, userId, data, ctx })
       session.flash('success', 'Payment recorded successfully')
     } catch (error) {
       session.flash('error', error.message)

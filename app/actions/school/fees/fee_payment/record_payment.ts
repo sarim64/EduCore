@@ -7,16 +7,19 @@ import { Infer } from '@vinejs/vine/types'
 import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
 import { Exception } from '@adonisjs/core/exceptions'
+import AuditService from '#services/audit_service'
+import type { HttpContext } from '@adonisjs/core/http'
 
 type Params = {
   schoolId: string
   userId: string
   data: Infer<typeof recordPaymentValidator>
+  ctx: HttpContext
 }
 
 export default class RecordPayment {
-  static async handle({ schoolId, userId, data }: Params) {
-    return db.transaction(async (trx) => {
+  static async handle({ schoolId, userId, data, ctx }: Params) {
+    const payment = await db.transaction(async (trx) => {
       // Get the challan
       const challan = await FeeChallan.query({ client: trx })
         .where('id', data.feeChallanId)
@@ -51,7 +54,7 @@ export default class RecordPayment {
       const chequeDateDateTime = data.chequeDate ? DateTime.fromJSDate(data.chequeDate) : null
 
       // Create payment record
-      const payment = await FeePayment.create(
+      const newPayment = await FeePayment.create(
         {
           schoolId,
           feeChallanId: data.feeChallanId,
@@ -83,8 +86,23 @@ export default class RecordPayment {
 
       await challan.save()
 
-      return payment
+      return newPayment
     })
+
+    await AuditService.log(
+      {
+        schoolId,
+        userId,
+        action: 'payment',
+        entityType: 'FeePayment',
+        entityId: payment.id,
+        newValues: { receiptNumber: payment.receiptNumber, amount: payment.amount, paymentMethod: payment.paymentMethod, feeChallanId: payment.feeChallanId },
+        description: 'Fee payment recorded',
+      },
+      ctx
+    )
+
+    return payment
   }
 
   static async #generateReceiptNumber(
@@ -108,5 +126,4 @@ export default class RecordPayment {
 
     return `${prefix}-${String(sequence).padStart(5, '0')}`
   }
-
 }

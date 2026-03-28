@@ -59,11 +59,12 @@ export default class FeeStructuresController {
     })
   }
 
-  async store({ request, response, session }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(createFeeStructureValidator)
 
-    await StoreFeeStructure.handle({ schoolId, data })
+    await StoreFeeStructure.handle({ schoolId, data, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Fee structure created successfully')
     return response.redirect().toRoute('fees.structures.index')
@@ -97,21 +98,23 @@ export default class FeeStructuresController {
     })
   }
 
-  async update({ params, request, response, session }: HttpContext) {
+  async update(ctx: HttpContext) {
+    const { params, request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(updateFeeStructureValidator)
 
-    await UpdateFeeStructure.handle({ id: params.id, schoolId, data })
+    await UpdateFeeStructure.handle({ id: params.id, schoolId, data, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Fee structure updated successfully')
     return response.redirect().toRoute('fees.structures.index')
   }
 
-  async destroy({ params, response, session }: HttpContext) {
+  async destroy(ctx: HttpContext) {
+    const { params, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
 
     try {
-      await DeleteFeeStructure.handle({ id: params.id, schoolId })
+      await DeleteFeeStructure.handle({ id: params.id, schoolId, ctx, userId: auth.user!.id })
       session.flash('success', 'Fee structure deleted successfully')
     } catch (error) {
       session.flash('error', error.message)

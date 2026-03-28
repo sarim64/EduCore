@@ -7,7 +7,8 @@ import app from '@adonisjs/core/services/app'
 import { createReadStream } from 'node:fs'
 
 export default class StudentDocumentsController {
-  async store({ request, response, session, params }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, params, auth } = ctx
     const schoolId = session.get('schoolId')
     const { studentId } = params
     const data = await request.validateUsing(createStudentDocumentValidator)
@@ -18,6 +19,8 @@ export default class StudentDocumentsController {
       name: data.name,
       type: data.type,
       file: data.file,
+      ctx,
+      userId: auth.user!.id,
     })
 
     session.flash('success', 'Document uploaded successfully')
@@ -41,7 +44,8 @@ export default class StudentDocumentsController {
     return response.stream(stream)
   }
 
-  async destroy({ params, response, session }: HttpContext) {
+  async destroy(ctx: HttpContext) {
+    const { params, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
 
     // Verify document belongs to school
@@ -50,7 +54,7 @@ export default class StudentDocumentsController {
       schoolId,
     })
 
-    await DeleteStudentDocument.handle({ id: params.id })
+    await DeleteStudentDocument.handle({ id: params.id, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Document deleted successfully')
     return response.redirect().back()

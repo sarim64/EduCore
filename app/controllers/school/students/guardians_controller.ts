@@ -29,12 +29,13 @@ export default class GuardiansController {
     return inertia.render('school/students/guardians/create', { studentId: studentId ?? null })
   }
 
-  async store({ request, response, session }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(createGuardianValidator)
     const studentId = request.input('studentId')
 
-    const guardian = await StoreGuardian.handle({ schoolId, data })
+    const guardian = await StoreGuardian.handle({ schoolId, data, ctx, userId: auth.user!.id })
 
     if (studentId) {
       await AttachGuardianToStudent.handle({
@@ -67,19 +68,21 @@ export default class GuardiansController {
     })
   }
 
-  async update({ params, request, response, session }: HttpContext) {
+  async update(ctx: HttpContext) {
+    const { params, request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(updateGuardianValidator)
 
-    await UpdateGuardian.handle({ guardianId: params.id, schoolId, data })
+    await UpdateGuardian.handle({ guardianId: params.id, schoolId, data, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Guardian updated successfully')
     return response.redirect().toRoute('guardians.index')
   }
 
-  async destroy({ params, response, session }: HttpContext) {
+  async destroy(ctx: HttpContext) {
+    const { params, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
-    await DeleteGuardian.handle({ guardianId: params.id, schoolId })
+    await DeleteGuardian.handle({ guardianId: params.id, schoolId, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Guardian deleted successfully')
     return response.redirect().toRoute('guardians.index')

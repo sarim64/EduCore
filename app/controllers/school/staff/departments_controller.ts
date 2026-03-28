@@ -21,11 +21,12 @@ export default class DepartmentsController {
     return inertia.render('school/staff/departments/create')
   }
 
-  async store({ request, response, session }: HttpContext) {
+  async store(ctx: HttpContext) {
+    const { request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(createDepartmentValidator)
 
-    await StoreDepartment.handle({ schoolId, data })
+    await StoreDepartment.handle({ schoolId, data, ctx, userId: auth.user!.id })
 
     session.flash('success', 'Department created successfully')
     return response.redirect().toRoute('staff.departments.index')
@@ -43,7 +44,8 @@ export default class DepartmentsController {
     })
   }
 
-  async update({ params, request, response, session }: HttpContext) {
+  async update(ctx: HttpContext) {
+    const { params, request, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
     const data = await request.validateUsing(updateDepartmentValidator)
 
@@ -51,18 +53,23 @@ export default class DepartmentsController {
       departmentId: params.id,
       schoolId,
       data,
+      ctx,
+      userId: auth.user!.id,
     })
 
     session.flash('success', 'Department updated successfully')
     return response.redirect().toRoute('staff.departments.index')
   }
 
-  async destroy({ params, response, session }: HttpContext) {
+  async destroy(ctx: HttpContext) {
+    const { params, response, session, auth } = ctx
     const schoolId = session.get('schoolId')
 
     await DeleteDepartment.handle({
       departmentId: params.id,
       schoolId,
+      ctx,
+      userId: auth.user!.id,
     })
 
     session.flash('success', 'Department deleted successfully')

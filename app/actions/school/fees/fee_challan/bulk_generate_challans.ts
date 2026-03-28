@@ -9,16 +9,19 @@ import { bulkGenerateChallanValidator } from '#validators/fee_challan'
 import { Infer } from '@vinejs/vine/types'
 import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
+import AuditService from '#services/audit_service'
+import type { HttpContext } from '@adonisjs/core/http'
 
 type Params = {
   schoolId: string
   userId: string
   data: Infer<typeof bulkGenerateChallanValidator>
+  ctx: HttpContext
 }
 
 export default class BulkGenerateChallans {
-  static async handle({ schoolId, userId, data }: Params) {
-    return db.transaction(async (trx) => {
+  static async handle({ schoolId, userId, data, ctx }: Params) {
+    const result = await db.transaction(async (trx) => {
       // Get all active enrollments for the academic year
       const enrollmentQuery = Enrollment.query({ client: trx })
         .where('academicYearId', data.academicYearId)
@@ -208,6 +211,19 @@ export default class BulkGenerateChallans {
         total: enrollments.length,
       }
     })
+
+    await AuditService.log(
+      {
+        schoolId,
+        userId,
+        action: 'create',
+        entityType: 'FeeChallan',
+        description: `Bulk generated ${result.generated} challans`,
+      },
+      ctx
+    )
+
+    return result
   }
 
   static async #getStartingSequence(
